@@ -2159,7 +2159,7 @@
               },
               E = function (Ee) {
                 if (pinDrag) {
-                  Ee.pointerId === pinDrag.pointerId && (Ee.stopPropagation(), endPinDrag());
+                  Ee.pointerId === pinDrag.pointerId && (Ee.stopPropagation(), endPinDrag(!0, Ee));
                   return;
                 }
                 // Event timestamps keep taps reliable when the main thread is briefly busy.
@@ -2447,18 +2447,29 @@
                 Ea.set(p.x, y, p.z).project(Ae);
                 return { x: ((Ea.x + 1) * Z.clientWidth) / 2, y: ((1 - Ea.y) * Z.clientHeight) / 2 };
               },
+              // Which pins a tap points at: the round pin heads first, then the name labels,
+              // then pins whose ground point is within a finger's width.
               pinsAtPoint = (clientX, clientY, rect) => {
+                let hits = (selector, pad) => {
+                  let ids = [];
+                  for (let [id, el] of h.current) {
+                    if (el.hidden || (selector === ".pin-label" && el.classList.contains("label-off"))) continue;
+                    let part = selector ? el.querySelector(selector) : el;
+                    if (!part) continue;
+                    let r2 = part.getBoundingClientRect();
+                    clientX >= r2.left - pad &&
+                      clientX <= r2.right + pad &&
+                      clientY >= r2.top - pad &&
+                      clientY <= r2.bottom + pad &&
+                      ids.push(id);
+                  }
+                  return ids;
+                };
+                let heads = hits(".pin-head", 2);
+                if (heads.length) return heads;
+                let labels = hits(".pin-label", 0);
+                if (labels.length) return labels;
                 let ids = [];
-                for (let [id, el] of h.current) {
-                  if (el.hidden) continue;
-                  let r2 = el.getBoundingClientRect();
-                  clientX >= r2.left - 3 &&
-                    clientX <= r2.right + 3 &&
-                    clientY >= r2.top - 3 &&
-                    clientY <= r2.bottom + 3 &&
-                    ids.push(id);
-                }
-                if (ids.length) return ids;
                 for (let [id, a2] of Je.anchors) {
                   let el = h.current.get(id);
                   if (!el || el.hidden) continue;
@@ -2577,14 +2588,15 @@
                 let g = groundAt(ev.clientX + pinDrag.offsetX, ev.clientY + pinDrag.offsetY);
                 g && setPending(constrainPin(g), !1);
               },
-              endPinDrag = (emit = !0) => {
+              endPinDrag = (emit = !0, ev = null) => {
                 if (!pinDrag) return;
-                let { pointerId, moved, id } = pinDrag;
+                let { pointerId, moved } = pinDrag;
                 ((pinDrag = null), (ve.enabled = !0), Z.classList.remove("is-dragging-pin"));
                 try {
                   Z.hasPointerCapture(pointerId) && Z.releasePointerCapture(pointerId);
                 } catch {}
-                (wo.cancel(), emit && (moved ? emitPending() : !ss && id && k.current.onSelect(id)));
+                // Not dragged: treat it as an ordinary tap (selection or the overlapping-pin list).
+                (wo.cancel(), emit && (moved ? emitPending() : !ss && ev && P(ev)));
               },
               viewOver = (p, distance) => {
                 (jr(),

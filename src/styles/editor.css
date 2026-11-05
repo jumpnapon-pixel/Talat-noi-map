@@ -127,6 +127,14 @@
 .ed-toolbar .ed-tool[data-slot="button"]:disabled {
   opacity: 0.42;
 }
+.ed-label-short {
+  display: none;
+}
+@media (max-width: 760px) {
+  .ed-tool .ed-label-short {
+    display: inline;
+  }
+}
 .ed-more {
   position: relative;
 }
@@ -320,7 +328,7 @@
   z-index: 8;
   cursor: grab;
 }
-.immersive-wrap .three-marker.is-moving .pin-head,
+.immersive-wrap.is-editing .three-marker.is-moving .pin-head,
 .immersive-wrap .three-ghost-pin .pin-head {
   box-shadow:
     0 0 0 3px #fff,
@@ -332,7 +340,7 @@
 .three-surface.is-dragging-pin * {
   cursor: grabbing !important;
 }
-.immersive-wrap .three-surface.is-dragging-pin .three-marker.is-moving .pin-head,
+.immersive-wrap.is-editing .three-surface.is-dragging-pin .three-marker.is-moving .pin-head,
 .immersive-wrap .three-surface.is-dragging-pin .three-ghost-pin .pin-head {
   animation: none;
   transform: translateY(-6px) scale(1.15);
@@ -346,7 +354,7 @@
     transform: translateY(-5px);
   }
 }
-.immersive-wrap .three-marker.is-moving .pin-label {
+.immersive-wrap.is-editing .three-marker.is-moving .pin-label {
   color: #fff;
   background: var(--ed-blue);
   outline: 0;
@@ -936,36 +944,58 @@
 }
 @media (max-width: 760px) {
   .ed-toolbar {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    gap: 6px;
-    padding: 8px 12px;
+    gap: 6px 4px;
+    padding: 6px 8px;
+    box-shadow: inset 0 2px 0 var(--ed-amber);
   }
-  .ed-toolbar-mode {
-    flex-basis: 100%;
+  .ed-toolbar-mode > div {
+    display: none;
   }
   .ed-toolbar-mode > svg {
-    width: 24px;
-    height: 24px;
-    padding: 4px;
+    width: 26px;
+    height: 26px;
+    padding: 5px;
   }
   .ed-toolbar-group {
     gap: 4px;
   }
   .ed-toolbar-publish {
+    flex-basis: 100%;
+    flex-wrap: nowrap;
     margin-left: 0;
-    flex-wrap: wrap;
   }
   .ed-toolbar .ed-tool[data-slot="button"] {
     min-height: 38px;
     padding: 0 9px;
+    gap: 4px;
+    font-size: 13px;
+  }
+  .ed-toolbar .ed-tool-compact[data-slot="button"] {
+    min-width: 38px;
+    padding: 0;
+  }
+  .ed-tool-compact .ed-label,
+  .ed-tool .ed-label-long {
+    display: none;
   }
   .ed-save-status {
-    order: 5;
-    flex-basis: 100%;
-    justify-content: center;
+    min-height: 38px;
+    padding: 2px 9px;
+    font-size: 12px;
     border-radius: 10px;
+  }
+  .ed-save-status .ed-status-detail {
+    display: none;
+  }
+  .ed-save-status .ed-status-message {
+    max-width: 230px;
+  }
+  .ed-more-menu {
+    position: fixed;
+    top: auto;
+    left: 8px;
+    right: 8px;
+    min-width: 0;
   }
   .ed-preview-banner,
   .ed-recovery-banner {

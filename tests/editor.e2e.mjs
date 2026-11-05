@@ -15,7 +15,8 @@ import { fileURLToPath } from "node:url";
 const require = createRequire(import.meta.url);
 const { chromium, devices } = require("playwright");
 const root = fileURLToPath(new URL("..", import.meta.url));
-const page = process.argv[2] ?? "index.html";
+const page = process.argv.slice(2).find((arg) => !arg.startsWith("--")) ?? "index.html";
+const only = process.argv.find((arg) => arg.startsWith("--only="))?.slice(7).split(",") ?? ["visitor", "desktop", "mobile"];
 const shots = join(root, "test-results");
 mkdirSync(shots, { recursive: true });
 
@@ -192,7 +193,7 @@ function tinyPng() {
 const browser = await chromium.launch();
 try {
   // 1. Visitors: no editing controls, published map intact.
-  {
+  if (only.includes("visitor")) {
     const { context, tab, errors } = await openPage(browser, { role: "viewer", fresh: true });
     check((await tab.locator(".three-marker:not([hidden])").count()) >= 10, "visitor map shows the illustrated 3D pins");
     check((await tab.locator("[data-testid=edit-map]").count()) === 0, "viewers do not get an Edit map button");
@@ -213,6 +214,7 @@ try {
   }
 
   // 2. Editor on desktop.
+  if (only.includes("desktop")) {
   const { context, tab, errors } = await openPage(browser, { role: "editor", fresh: true });
   check(await tab.locator("[data-testid=edit-map]").isVisible(), "editors see a clearly labelled Edit map button");
   await enterEditor(tab);
@@ -386,12 +388,15 @@ try {
   await tab.locator('.stop[data-place-id="holy-rosary"]').click(); // focuses the shared spot
   await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
   await tab.waitForTimeout(800);
-  const a = await markerBox(tab, "old-bank");
-  const b = await markerBox(tab, "holy-rosary");
-  const left = Math.max(a.x, b.x), right = Math.min(a.x + a.width, b.x + b.width);
-  const top = Math.max(a.y, b.y), bottom = Math.min(a.y + a.height, b.y + b.height);
-  check(left < right && top < bottom, "pins on the same spot are spread apart but still overlap", `${Math.round(right - left)}×${Math.round(bottom - top)} px`);
-  await tab.mouse.click((left + right) / 2, (top + bottom) / 2);
+  // Tap the ground just below the shared spot, where both pins' ground points are.
+  const spot = await tab.evaluate(() => {
+    const surface = document.querySelector(".three-surface").getBoundingClientRect();
+    const markers = ["old-bank", "holy-rosary"].map((id) => document.querySelector(`.three-marker[data-place-id="${id}"]`));
+    const still = markers.find((el) => !el.classList.contains("moved")) ?? markers[0];
+    return { x: surface.left + parseFloat(still.style.left), y: surface.top + parseFloat(still.style.top), spread: markers.some((el) => el.classList.contains("moved")) };
+  });
+  check(spot.spread, "pins on the same spot are spread apart with a leader line");
+  await tab.mouse.click(spot.x, spot.y + 22);
   await tab.waitForTimeout(300);
   const chooser = await tab.locator(".pin-chooser").count();
   check(chooser === 1, "overlapping pins offer a list to pick one");
@@ -478,14 +483,16 @@ try {
   check((await tab.locator("[data-testid=place-panel] input[name=hours]").inputValue()) === "Recovered hours", "restored edits are back in the panel");
   check(errors.length === 0, "no page errors in the editor", errors.join(" | "));
   await context.close();
+  }
 
   // 3. Mobile editor (touch).
-  {
+  if (only.includes("mobile")) {
     const { context, tab, errors } = await openPage(browser, { role: "editor", device: "iPhone 13", fresh: true });
     await tab.locator("[data-testid=edit-map]").tap();
     await tab.waitForSelector("[data-testid=editor-toolbar]");
     await tab.waitForTimeout(600);
-    await tab.locator(".three-surface").scrollIntoViewIfNeeded();
+    const toolbarHeight = (await tab.locator("[data-testid=editor-toolbar]").boundingBox()).height;
+    check(toolbarHeight <= 110, "the editing toolbar stays compact on a phone", `${Math.round(toolbarHeight)} px`);
     await tab.screenshot({ path: join(shots, "13-mobile-editor.png") });
     let box = await markerBox(tab, "so-heng-tai");
     await tab.touchscreen.tap(box.x + box.width / 2, box.y + 22);
@@ -495,7 +502,6 @@ try {
     await tab.screenshot({ path: join(shots, "14-mobile-panel.png") });
     await tab.locator("[data-testid=panel-move-pin]").tap();
     await tab.waitForSelector("[data-testid=placement-bar]");
-    await tab.locator(".three-surface").scrollIntoViewIfNeeded();
     box = await markerBox(tab, "so-heng-tai");
     await tab.touchscreen.tap(box.x + box.width / 2 + 40, box.y + 70);
     await tab.waitForTimeout(400);

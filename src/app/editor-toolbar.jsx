@@ -59,7 +59,20 @@ function SaveStatus({ save, draft, onRetry }) {
   );
 }
 
-function ToolbarButton({ icon: IconComponent, label, onClick, disabled, pressed, variant = "outline", testId, title, className }) {
+// On phones the toolbar uses `shortLabel`, or only the icon when `compact` is set.
+function ToolbarButton({
+  icon: IconComponent,
+  label,
+  shortLabel,
+  compact = false,
+  onClick,
+  disabled,
+  pressed,
+  variant = "outline",
+  testId,
+  title,
+  className,
+}) {
   return (
     <Button
       variant={variant}
@@ -67,12 +80,14 @@ function ToolbarButton({ icon: IconComponent, label, onClick, disabled, pressed,
       onClick={onClick}
       disabled={disabled}
       aria-pressed={pressed === undefined ? undefined : pressed}
+      aria-label={label}
       title={title ?? label}
       data-testid={testId}
-      className={`ed-tool ${className ?? ""}`}
+      className={`ed-tool ${compact ? "ed-tool-compact" : ""} ${className ?? ""}`}
     >
       <IconComponent />
-      <span>{label}</span>
+      <span className={shortLabel ? "ed-label-long" : "ed-label"}>{label}</span>
+      {shortLabel && <span className="ed-label-short">{shortLabel}</span>}
     </Button>
   );
 }
@@ -91,7 +106,7 @@ function MoreToolsMenu({ items }) {
   }, [open]);
   return (
     <div className="ed-more" ref={ref}>
-      <ToolbarButton icon={Icon.More} label="More" pressed={open} onClick={() => setOpen(!open)} testId="more-tools" />
+      <ToolbarButton icon={Icon.More} label="More" compact pressed={open} onClick={() => setOpen(!open)} testId="more-tools" />
       {open && (
         <div className="ed-more-menu" role="menu">
           {items.map((item) => (
@@ -157,6 +172,7 @@ function EditorToolbar({
         <ToolbarButton
           icon={Icon.Move}
           label="Move pin"
+          shortLabel="Move"
           variant={tool === "move" || tool === "pick-move" ? "default" : "outline"}
           pressed={tool === "move" || tool === "pick-move"}
           disabled={busy || (placing && tool !== "move")}
@@ -169,6 +185,7 @@ function EditorToolbar({
         <ToolbarButton
           icon={Icon.Undo}
           label="Undo"
+          compact
           disabled={busy || placing || !history.canUndo}
           title={history.undoLabel ? `Undo: ${history.undoLabel}` : "Nothing to undo"}
           onClick={history.undo}
@@ -177,6 +194,7 @@ function EditorToolbar({
         <ToolbarButton
           icon={Icon.Redo}
           label="Redo"
+          compact
           disabled={busy || placing || !history.canRedo}
           title={history.redoLabel ? `Redo: ${history.redoLabel}` : "Nothing to redo"}
           onClick={history.redo}
@@ -188,6 +206,7 @@ function EditorToolbar({
         <ToolbarButton
           icon={Icon.Save}
           label="Save draft"
+          shortLabel="Save"
           variant={save.state === "unsaved" || save.state === "failed" ? "default" : "outline"}
           disabled={busy || placing || save.state === "saving" || save.state === "saved"}
           onClick={onSave}
@@ -203,7 +222,7 @@ function EditorToolbar({
           testId="tool-publish"
         />
         <MoreToolsMenu items={moreItems} />
-        <ToolbarButton icon={Icon.Exit} label="Exit editing" variant="ghost" disabled={placing} onClick={onExit} testId="tool-exit" />
+        <ToolbarButton icon={Icon.Exit} label="Exit editing" shortLabel="Exit" variant="ghost" disabled={placing} onClick={onExit} testId="tool-exit" />
       </div>
     </div>
   );
