@@ -6,6 +6,8 @@ art & craft, food & drink and community, shown on an illustrated 3D map, two fla
 illustrated maps and a navigation map. Editors can add, select, move and update place pins
 directly on the 3D map.
 
+- **Working preview with the editor:** <https://claude.ai/artifact/L11qJxFD2DWdfMLXjzZyd4>
+  (private until shared from its Share menu)
 - **How to edit the map (no coding):** [docs/EDITING-GUIDE.md](docs/EDITING-GUIDE.md)
 - **How it is built:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
