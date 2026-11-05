@@ -2,9 +2,8 @@
 Codes and progress of Talat Noi
 
 An interactive story map of Talat Noi (ตลาดน้อย), Bangkok: places across heritage, belief,
-art & craft, food & drink and community, shown on an illustrated 3D map, two flat
-illustrated maps and a navigation map. Editors can add, select, move and update place pins
-directly on the 3D map.
+art & craft, food & drink and community, shown on two illustrated maps and a navigation
+map. Editors can add, select, move and update place pins directly on the illustrated map.
 
 - **Working preview with the editor:** <https://claude.ai/artifact/L11qJxFD2DWdfMLXjzZyd4>
   (private until shared from its Share menu)
@@ -17,9 +16,9 @@ The map started as a snapshot of the Claude artifact
 ## Editing in short
 
 1. Open the map as an Editor or Owner and press **Edit map**.
-2. Tap a pin to open its panel, or press **Add pin** and tap the map.
-3. Drag the pin, or press **Move pin** and tap the destination. Fine-tune with the arrows or
-   the top-down view, then **Confirm position**.
+2. Tap a pin to open its panel, or press **Add pin** and tap the illustration.
+3. To move a pin, press **Move pin** and tap where it should be. Set the place's real location
+   for navigation and directions with **Set real location** (the navigation map).
 4. Edit names, category, description, visitor information and the photo in the panel.
 5. **Save draft**, check with **Preview**, then **Publish** for visitors.
 

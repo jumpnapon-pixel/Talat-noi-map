@@ -34,8 +34,6 @@ function PlacePanel({
   issues = {},
   onChange,
   onMove,
-  onFocus,
-  onPlaceOnIllustration,
   onSetOnNavigationMap,
   onDelete,
   onClose,
@@ -62,8 +60,8 @@ function PlacePanel({
         <Button onClick={onMove} data-testid="panel-move-pin">
           <Icon.Move /> Move pin
         </Button>
-        <Button variant="outline" onClick={onFocus}>
-          <Icon.Focus /> Show on map
+        <Button variant="outline" onClick={onSetOnNavigationMap} data-testid="panel-set-location">
+          <Icon.Locate /> Set real location
         </Button>
       </div>
 
@@ -220,21 +218,37 @@ function PlacePanel({
 
         <PanelSection
           title="Position"
-          description="A place has two separate positions. Moving the pin on the 3D map changes only its real location."
+          description="A place has two separate positions: its pin on the illustrated map, and its real location for navigation and directions."
           testId="position-section"
         >
           <div className="ed-position-card">
             <div className="ed-position-head">
+              <strong>Pin on the illustrated map</strong>
+              <span>"Illustrated" and "Original" views</span>
+            </div>
+            <p className="ed-position-value" data-testid="illustration-position">
+              {Math.round(place.x)}% across, {Math.round(place.y)}% down
+            </p>
+            {place.illustrationEstimated && (
+              <p className="ed-note ed-note-warning">
+                Rough guess from the nearest place. Use Move pin to place it on the illustration.
+              </p>
+            )}
+            <div className="ed-position-actions">
+              <Button size="sm" onClick={onMove}>
+                <Icon.Move /> Move pin
+              </Button>
+            </div>
+          </div>
+          <div className="ed-position-card">
+            <div className="ed-position-head">
               <strong>Real location</strong>
-              <span>3D map, navigation and directions</span>
+              <span>Navigation map and directions</span>
             </div>
             <p className="ed-position-value" data-testid="real-location">
               {Geo.formatLatLng(place)}
             </p>
             <div className="ed-position-actions">
-              <Button size="sm" onClick={onMove}>
-                <Icon.Move /> Move pin on 3D map
-              </Button>
               <Button size="sm" variant="outline" onClick={onSetOnNavigationMap}>
                 <Icon.Locate /> Use navigation map
               </Button>
@@ -260,27 +274,10 @@ function PlacePanel({
                 />
               </div>
               {issues.lat && <p className="ed-error">{issues.lat}</p>}
-              {!coordinatesSet && <p className="ed-note">Without coordinates the pin uses its flat-illustration position on the 3D map.</p>}
             </details>
-          </div>
-          <div className="ed-position-card">
-            <div className="ed-position-head">
-              <strong>Flat illustration</strong>
-              <span>"Illustrated" and "Original" views</span>
-            </div>
-            <p className="ed-position-value">
-              {Math.round(place.x)}% across, {Math.round(place.y)}% down
-            </p>
-            {place.illustrationEstimated && (
-              <p className="ed-note ed-note-warning">
-                Rough guess from the nearest place. Check it on the illustration.
-              </p>
+            {!coordinatesSet && (
+              <p className="ed-note">Not set yet. Without it, the place is left out of the navigation map and directions.</p>
             )}
-            <div className="ed-position-actions">
-              <Button size="sm" variant="outline" onClick={onPlaceOnIllustration}>
-                <Icon.MapPin /> Place on illustration
-              </Button>
-            </div>
           </div>
         </PanelSection>
 

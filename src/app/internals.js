@@ -32,13 +32,10 @@ const placeFromFieldworkPhoto = $N; // (photo, url, extra) -> new place
 const fieldworkPhotoUrl = U3; // (asset, filename, options) -> url
 
 // Geography (see src/app/geo.js).
-const sceneFromLatLng = cu;
-const latLngFromScene = R3;
 const sceneFromIllustration = ho;
 const hasCoordinates = qo;
 
 // Map views and place components.
-const Illustrated3DMap = fE;
 const NavigationMap = pE;
 const GoogleStreetMap = k3;
 const VisitorPlaceCard = mE;
@@ -47,8 +44,6 @@ const MenuDrawer = gE;
 const ArchitectureNotes = SU;
 const PhotoQueueList = IU;
 const PhotoQueueReview = PU;
-const StructureList = wU;
-const StructureEditor = MU;
 const PlacePhoto = Ys;
 const CategoryChip = Ul;
 const CategoryIcon = dS;

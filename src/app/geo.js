@@ -1,14 +1,13 @@
 // The map keeps two independent positions for every place:
 //
-// 1. Real-world location: place.lat / place.lng (WGS84). The illustrated 3D map is built
-//    from OpenStreetMap geography, so its ground plane converts exactly to latitude and
-//    longitude. Moving or adding a pin on the 3D map saves these coordinates. They also
-//    drive the navigation map, the street map and walking directions.
+// 1. Position on the flat illustration: place.x / place.y, percentages (2–98) of the
+//    hand-drawn artwork used by the "Illustrated" and "Original" views. Adding or moving a
+//    pin in the editor sets these. The artwork is stylised and rotated, so it cannot be
+//    computed from coordinates (a fitted transform is off by 15% on average).
 //
-// 2. Position on the flat illustration: place.x / place.y, percentages (2–98) of the
-//    hand-drawn artwork used by the "Illustrated" and "Original" views. The artwork is
-//    stylised and rotated, so it cannot be computed from coordinates (a fitted transform is
-//    off by 15% on average). It is edited separately and never overwritten by a 3D move.
+// 2. Real-world location: place.lat / place.lng (WGS84), set on the navigation map or typed
+//    in. They drive the navigation map, the street map and walking directions. A place may
+//    have none yet (null), in which case it is left out of navigation.
 
 const Geo = {
   roundCoordinate(value) {

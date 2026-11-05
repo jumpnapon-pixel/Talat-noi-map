@@ -5121,7 +5121,8 @@
                             variant: "outline",
                             disabled: d,
                             onClick: o,
-                            children: [(0, rt.jsx)(Yi, {}), " Place on 3D map"],
+                            // Talat Noi editor: the 3D view was removed; new pins are placed on the illustration.
+                            children: [(0, rt.jsx)(Yi, {}), " Place on illustration"],
                           }),
                           (0, rt.jsxs)(_t, {
                             variant: "outline",

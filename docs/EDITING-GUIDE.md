@@ -12,42 +12,35 @@ This guide is for people who look after the map's places. No coding needed.
 
 ## Choose a place
 
-- Tap or click a pin on the 3D map, or choose the place in the list on the left (use the
-  search box to find it). The pin is highlighted and the place panel opens on the right
+- Tap or click a pin on the illustrated map, or choose the place in the list on the left (use
+  the search box to find it). The pin is highlighted and the place panel opens on the right
   (at the bottom on a phone).
-- If several pins sit close together, tapping there shows a short list. Pick the one you
-  mean.
+- Pins that sit close together are spread apart with a thin line to their spot, so each one
+  can be tapped.
 
 ## Move a pin
 
-There are two ways. Both show a live preview (a blue pin with a blue ring on the ground)
-and nothing changes until you press **Confirm position**.
+1. Press **Move pin** (in the toolbar or the place panel). A yellow bar asks you to tap the
+   illustration.
+2. Tap where the place should be. The pin moves there and the panel opens again.
 
-**Drag it.** Press on the highlighted pin and drag it. The map holds still while you drag.
+Press **Cancel** (or Esc) to leave the pin where it was. **Undo** takes a move back.
 
-**Tap the destination.** Press **Move pin** (in the toolbar or the place panel), then tap
-where the place should be.
+Moving a pin changes only where it sits on the illustrated map. The place's **real location**
+(latitude and longitude), used by the navigation map and walking directions, is separate:
 
-Then fine-tune if you need to:
-
-- The **arrow buttons** nudge the pin by 1 m (tap **1 m** to switch to 5 m steps).
-- **Top-down view** looks straight down for precise placement. **Back to 3D view** returns.
-- Pins can't sit on a roof, on a 3D landmark model or outside the red project boundary. If
-  you drop one there, it moves to the nearest open ground and the bar tells you so.
-
-Press **Confirm position** to keep it, or **Cancel** to put it back.
-
-Moving a pin on the 3D map changes the place's **real location** (latitude and longitude),
-which is also used by the navigation map and walking directions. It does **not** change
-the pin's position on the flat hand-drawn illustration. To change that, press
-**Place on illustration** in the panel's **Position** section and tap the illustration.
+- Press **Set real location** in the panel (or **Use navigation map** in its **Position**
+  section), then tap the exact entrance on the navigation map.
+- Or type the coordinates under **Type coordinates**.
 
 ## Add a place
 
-1. Press **Add pin**, then tap the map where the place is. Adjust it like a moved pin.
-2. Press **Confirm position**. A short form opens: name, category, a short description and
-   an optional photo.
+1. Press **Add pin**, then tap the illustration where the place is. A preview pin shows the
+   spot.
+2. A short form opens: name, category, a short description and an optional photo.
 3. Press **Add place and save draft**. You can fill in more details in the panel afterwards.
+4. Set its real location with **Set real location** so it appears on the navigation map and
+   in walking directions.
 
 New places get a “Needs verification” label for visitors until someone checks them.
 
@@ -62,8 +55,8 @@ The place panel has, from top to bottom:
   photo for people using screen readers) and the photo credit.
 - **Description** and **Visitor information** (visiting tip, entrance, opening hours, price,
   Google Maps link)
-- **Position**: the real location (with **Move pin on 3D map**) and the position on the flat
-  illustration
+- **Position**: the pin on the illustrated map (with **Move pin**) and the real location for
+  navigation and directions (with **Use navigation map** or typed coordinates)
 - **Visibility**: whether the place shows on the visitor map when you publish, and the
   fact-check details
 - **Delete place** (asks you to confirm)
@@ -91,6 +84,5 @@ The place panel has, from top to bottom:
 
 ## More tools
 
-Under **More**: the fieldwork photo queue, the 3D structures workspace (move, turn or hide
-the illustrated landmark models), **Download a backup** of your working copy, and **Import
-places from a file**.
+Under **More**: the fieldwork photo queue, **Download a backup** of your working copy, and
+**Import places from a file**.

@@ -107,34 +107,26 @@ function TalatNoiApp({ storePromise }) {
   const [lang, setLang] = useState("en");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
-  const [view, setView] = useState("immersive");
+  const [view, setView] = useState("digital"); // "digital" (Illustrated) | "original" | "street"
   const [centerRequest, setCenterRequest] = useState(0);
   const [navOpen, setNavOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 });
   const [isMobile, setIsMobile] = useState(false);
-  const [workspace, setWorkspace] = useState("places"); // "places" | "photos" | "structures"
+  const [workspace, setWorkspace] = useState("places"); // "places" | "photos"
 
-  // Pin placement.
-  const [placement, setPlacement] = useState(null); // { kind: "add" | "move", id?, category?, fromPhoto? }
+  // Pin placement on the illustration, and real locations from the navigation map.
+  const [flatPlacing, setFlatPlacing] = useState(null); // { kind: "add", category, fromPhoto? } | { kind: "move", id }
   const [pickToMove, setPickToMove] = useState(false);
-  const [placementInfo, setPlacementInfo] = useState(null);
-  const [nudgeStep, setNudgeStep] = useState(1);
-  const [topView, setTopView] = useState(false);
-  const [addForm, setAddForm] = useState(null); // { lat, lng, fromPhoto? }
-  const [flatPlacing, setFlatPlacing] = useState(null); // { id }
-  const [navPlacing, setNavPlacing] = useState(null); // { kind: "place" | "structure" | "photo", id?, photo? }
+  const [addForm, setAddForm] = useState(null); // { x, y } or { lat, lng }, plus category and fromPhoto?
+  const [navPlacing, setNavPlacing] = useState(null); // { kind: "place" | "photo", id?, photo? }
 
-  // 3D structures and the fieldwork photo queue.
-  const [selectedStructureId, setSelectedStructureId] = useState(null);
-  const [structurePanelOpen, setStructurePanelOpen] = useState(false);
-  const [structurePlacing, setStructurePlacing] = useState(false);
+  // The fieldwork photo queue.
   const [queuePhotoId, setQueuePhotoId] = useState(null);
   const [queueStage, setQueueStage] = useState(null);
   const [queueError, setQueueError] = useState("");
 
-  const mapApi = useRef(null);
   const viewportRef = useRef(null);
   const canvasRef = useRef(null);
   const sectionRef = useRef(null);
@@ -148,12 +140,11 @@ function TalatNoiApp({ storePromise }) {
   langRef.current = lang;
 
   const places = editing ? doc.places : previewing ? doc.places.filter((place) => place.approved) : published.places;
-  const structures = editing || previewing ? doc.structures : published.structures;
   const selected = places.find((place) => place.id === selectedId) ?? null;
   const publishedById = useMemo(() => new Map(published.places.map((place) => [place.id, place])), [published.places]);
   const visiblePlaces = places.filter(
     (place) =>
-      (placement?.kind === "move" && placement.id === place.id) ||
+      (flatPlacing?.kind === "move" && flatPlacing.id === place.id) ||
       ((category === "All" || place.category === category) &&
         `${place.nameEn} ${place.nameTh} ${place.category}`.toLowerCase().includes(query.toLowerCase())),
   );
@@ -168,11 +159,10 @@ function TalatNoiApp({ storePromise }) {
           ? { ...save, state: "unsaved" }
           : { ...save, state: "saved" };
   const busy = openingEditor || publishing || saveView.state === "saving";
-  const placing = !!placement;
+  const placing = !!flatPlacing;
   const queuePhoto = FIELDWORK_PHOTOS.find((photo) => photo.id === queuePhotoId) ?? null;
   const queue = fieldworkQueue(doc.places);
   const queuedCount = queue.filter((item) => !item.place).length;
-  const selectedStructure = doc.structures.find((structure) => structure.id === selectedStructureId) ?? null;
 
   // ----- Store, permissions and the published edition ---------------------------------
   useEffect(() => {
@@ -286,7 +276,7 @@ function TalatNoiApp({ storePromise }) {
   }, [published.places, mode]);
 
   // ----- Selection -----------------------------------------------------------------------
-  const selectPlace = (id, { focus = false } = {}) => {
+  const selectPlace = (id) => {
     if (pickToMove && editing) {
       setPickToMove(false);
       startMove(id);
@@ -295,17 +285,10 @@ function TalatNoiApp({ storePromise }) {
     setSelectedId(id);
     setCardOpen(true);
     setNavPlacing(null);
-    if (focus) mapApi.current?.focus(id);
   };
   const closeCard = useCallback(() => {
     setCardOpen(false);
-    setTimeout(
-      () =>
-        document
-          .querySelector(".three-marker.selected:not([hidden]),.map-marker.is-selected")
-          ?.focus({ preventScroll: true }),
-      0,
-    );
+    setTimeout(() => document.querySelector(".map-marker.is-selected")?.focus({ preventScroll: true }), 0);
   }, []);
   const closeMenu = useCallback(() => setMenuOpen(false), []);
 
@@ -331,7 +314,6 @@ function TalatNoiApp({ storePromise }) {
       setMode("editor");
       setCardOpen(false);
       setWorkspace("places");
-      mapApi.current?.stopTour();
       const recovery = Recovery.read(store.kind);
       if (
         recovery &&
@@ -363,7 +345,7 @@ function TalatNoiApp({ storePromise }) {
     try {
       structuresToSave = StructuresSchema.parse(docToSave.structures);
     } catch (error) {
-      setSave({ state: "failed", savedAt: save.savedAt, message: "A 3D structure has an invalid value." });
+      setSave({ state: "failed", savedAt: save.savedAt, message: "Some saved map data has an invalid value." });
       return false;
     }
     setSave((current) => ({ ...current, state: "saving", message: "" }));
@@ -426,7 +408,6 @@ function TalatNoiApp({ storePromise }) {
     setExitDialog(false);
     setWorkspace("places");
     setShowIssues(false);
-    setFlatPlacing(null);
     setNavPlacing(null);
   }
 
@@ -456,7 +437,7 @@ function TalatNoiApp({ storePromise }) {
         (current) => ({ places: [...current.places, ...newPlaces], structures: [...current.structures, ...newStructures] }),
         { label: "Import places" },
       );
-      toast.success(`${newPlaces.length} places and ${newStructures.length} structures added. Review, save and publish when ready.`);
+      toast.success(`${newPlaces.length} ${newPlaces.length === 1 ? "place" : "places"} added. Review, save and publish when ready.`);
     } catch (error) {
       toast.error(error.message || "That file could not be imported.");
     }
@@ -484,86 +465,74 @@ function TalatNoiApp({ storePromise }) {
     toast.success(`“${place.nameEn}” deleted from the draft. Use Undo to bring it back.`);
   }
 
-  // ----- Editor: pin placement on the 3D map -------------------------------------------------
+  // ----- Editor: placing pins on the illustration ----------------------------------------------
+  // Pins are added and moved by tapping the flat illustration ("Illustrated" or "Original"
+  // view), which sets place.x / place.y. The real location (lat / lng) used by the
+  // navigation map and directions is set separately on the navigation map.
   function endPlacement() {
-    if (topView) mapApi.current?.restoreView();
-    setTopView(false);
-    setPlacement(null);
-    setPlacementInfo(null);
+    setFlatPlacing(null);
     setPickToMove(false);
     setAddForm(null);
   }
 
-  function startAddPin(fromPhoto = null) {
-    if (!editing) return;
+  const showIllustration = () => setView((current) => (current === "original" ? current : "digital"));
+
+  function startPlacing(target) {
     setWorkspace("places");
-    setView("immersive");
+    showIllustration();
     setCardOpen(false);
-    setFlatPlacing(null);
     setPickToMove(false);
     setAddForm(null);
-    setPlacementInfo(null);
     setQueuePhotoId(null);
-    setPlacement({ kind: "add", category: fromPhoto?.category ?? "Community", fromPhoto });
+    setFlatPlacing(target);
     sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function startAddPin(fromPhoto = null) {
+    if (!editing) return;
+    startPlacing({ kind: "add", category: fromPhoto?.category ?? "Community", fromPhoto });
   }
 
   function startMove(id) {
     if (!editing) return;
     if (!id) {
+      endPlacement();
       setPickToMove(true);
-      setView("immersive");
+      showIllustration();
       setCardOpen(false);
       toast(tr("Tap the pin you want to move.", "แตะหมุดที่ต้องการย้าย"));
       return;
     }
-    setWorkspace("places");
     setSelectedId(id);
-    setView("immersive");
-    setCardOpen(false);
-    setFlatPlacing(null);
-    setPickToMove(false);
-    setPlacementInfo(null);
-    setPlacement({ kind: "move", id });
-    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  // The 3D map asks for a move when a selected pin is dragged directly.
-  const requestMove = (id) => {
-    setSelectedId(id);
-    setCardOpen(false);
-    setPickToMove(false);
-    setPlacement((current) => (current?.kind === "move" && current.id === id ? current : { kind: "move", id }));
-  };
-
-  function confirmPlacement() {
-    const info = mapApi.current?.placementInfo() ?? placementInfo;
-    if (!placement || !info) return;
-    if (placement.kind === "add") {
-      setAddForm({ lat: info.lat, lng: info.lng, fromPhoto: placement.fromPhoto ?? null });
-      return;
-    }
-    if (!info.moved) return;
-    const place = doc.places.find((item) => item.id === placement.id);
-    if (!place) return endPlacement();
-    const patch = { lat: info.lat, lng: info.lng };
-    const wasChecked = place.verification === "checked";
-    if (wasChecked) Object.assign(patch, { verification: "pending", lastChecked: "" });
-    history.change((current) => updatePlaceIn(current, place.id, patch), { label: `Move “${place.nameEn}”` });
-    endPlacement();
-    setSelectedId(place.id);
-    setCardOpen(true);
-    toast.success(
-      wasChecked
-        ? "Pin moved and marked “Needs verification”. Save the draft to keep it."
-        : "Pin moved. Save the draft to keep it.",
-    );
+    startPlacing({ kind: "move", id });
   }
 
   function cancelPlacement() {
-    const reopen = placement?.kind === "move" ? placement.id : null;
+    const reopen = flatPlacing?.kind === "move" ? flatPlacing.id : null;
     endPlacement();
     if (reopen) (setSelectedId(reopen), setCardOpen(true));
+  }
+
+  function handleFlatMapClick(event) {
+    if (!flatPlacing || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clamp = (value) => Math.round(Math.max(2, Math.min(98, value)) * 10) / 10;
+    const x = clamp((100 * (event.clientX - rect.left)) / rect.width);
+    const y = clamp((100 * (event.clientY - rect.top)) / rect.height);
+    const target = flatPlacing;
+    setFlatPlacing(null);
+    if (target.kind === "add") {
+      setAddForm({ x, y, category: target.category, fromPhoto: target.fromPhoto ?? null });
+      return;
+    }
+    const place = doc.places.find((item) => item.id === target.id);
+    if (!place) return;
+    history.change((current) => updatePlaceIn(current, place.id, { x, y, illustrationEstimated: false }), {
+      label: `Move “${place.nameEn}”`,
+    });
+    setSelectedId(place.id);
+    setCardOpen(true);
+    toast.success("Pin moved. Save the draft to keep it.");
   }
 
   async function submitNewPlace(fields) {
@@ -572,7 +541,9 @@ function TalatNoiApp({ storePromise }) {
     const base = photo
       ? placeFromFieldworkPhoto(photo, fields.photoUrl || photo.asset, {})
       : createPlaceRecord(uniquePlaceId(fields.nameEn, doc.places));
-    const illustration = Geo.estimateIllustration(doc.places, addForm);
+    const onIllustration = Number.isFinite(addForm.x) && Number.isFinite(addForm.y);
+    const located = Number.isFinite(addForm.lat) && Number.isFinite(addForm.lng);
+    const illustration = onIllustration ? { x: addForm.x, y: addForm.y } : Geo.estimateIllustration(doc.places, addForm);
     const place = {
       ...base,
       id: photo ? uniquePlaceId(base.id, doc.places) : base.id,
@@ -584,11 +555,11 @@ function TalatNoiApp({ storePromise }) {
       photoAlt: fields.photoUrl ? fields.photoAlt || fields.nameEn : "",
       photoCredit: fields.photoUrl ? fields.photoCredit : "",
       photoSource: fields.photoUrl ? fields.photoSource : "",
-      lat: addForm.lat,
-      lng: addForm.lng,
+      lat: located ? addForm.lat : (base.lat ?? null),
+      lng: located ? addForm.lng : (base.lng ?? null),
       x: illustration.x,
       y: illustration.y,
-      illustrationEstimated: true,
+      illustrationEstimated: !onIllustration,
       approved: fields.approved,
       verification: "pending",
       verificationNotes: "New pin added in the map editor. The name, details and exact position need a community check.",
@@ -599,32 +570,12 @@ function TalatNoiApp({ storePromise }) {
     setSelectedId(place.id);
     setCardOpen(true);
     const ok = await saveDraft({ docToSave: nextDoc });
-    ok && toast.success(`“${place.nameEn}” added and the draft is saved.`);
-  }
-
-  function placeOnIllustration(id) {
-    endPlacement();
-    setFlatPlacing({ id });
-    setView("digital");
-    setCardOpen(false);
-    sectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }
-
-  function handleFlatMapClick(event) {
-    if (!flatPlacing || !canvasRef.current) return;
-    const rect = canvasRef.current.getBoundingClientRect();
-    const clamp = (value) => Math.round(Math.max(2, Math.min(98, value)) * 10) / 10;
-    const x = clamp((100 * (event.clientX - rect.left)) / rect.width);
-    const y = clamp((100 * (event.clientY - rect.top)) / rect.height);
-    const place = doc.places.find((item) => item.id === flatPlacing.id);
-    if (place)
-      history.change((current) => updatePlaceIn(current, place.id, { x, y, illustrationEstimated: false }), {
-        label: `Place “${place.nameEn}” on the illustration`,
-      });
-    setFlatPlacing(null);
-    setSelectedId(flatPlacing.id);
-    setCardOpen(true);
-    toast.success("Illustration position updated. Save the draft to keep it.");
+    if (!ok) return;
+    hasCoordinates(place)
+      ? toast.success(`“${place.nameEn}” added and the draft is saved.`)
+      : toast.success(`“${place.nameEn}” added and the draft is saved.`, {
+          description: "To include it in navigation and directions, set its real location with “Use navigation map”.",
+        });
   }
 
   function placeFromNavigation(latLng) {
@@ -637,42 +588,22 @@ function TalatNoiApp({ storePromise }) {
       if (!place) return;
       const patch = { lat: Geo.roundCoordinate(latLng.lat), lng: Geo.roundCoordinate(latLng.lng) };
       if (place.verification === "checked") Object.assign(patch, { verification: "pending", lastChecked: "" });
-      history.change((current) => updatePlaceIn(current, place.id, patch), { label: `Move “${place.nameEn}”` });
+      history.change((current) => updatePlaceIn(current, place.id, patch), { label: `Set the real location of “${place.nameEn}”` });
       setSelectedId(place.id);
       setCardOpen(true);
-      toast.success("Coordinates updated. Check the entrance before marking the place as checked.");
-    } else if (target.kind === "structure") {
-      history.change(
-        (current) => ({
-          ...current,
-          structures: current.structures.map((structure) =>
-            structure.id === target.id ? { ...structure, geoPosition: latLng, hidden: false } : structure,
-          ),
-        }),
-        { label: "Set structure location" },
-      );
-      setStructurePanelOpen(true);
-      toast.success("Location reference saved. The illustrated model stays in place.");
+      toast.success("Real location updated. Check the entrance before marking the place as checked.");
     } else if (target.kind === "photo") {
+      setWorkspace("places");
       setAddForm({
         lat: Geo.roundCoordinate(latLng.lat),
         lng: Geo.roundCoordinate(latLng.lng),
+        category: target.photo.category ?? "Community",
         fromPhoto: target.photo,
       });
     }
   }
 
-  // ----- Editor: 3D structures and the photo queue --------------------------------------------
-  const changeStructure = (patch) =>
-    history.change(
-      (current) => ({
-        ...current,
-        structures: current.structures.map((structure) =>
-          structure.id === selectedStructureId ? { ...structure, ...patch } : structure,
-        ),
-      }),
-      { label: "Edit 3D structure", group: `structure:${selectedStructureId}:${Object.keys(patch).join(",")}` },
-    );
+  // ----- Editor: the fieldwork photo queue ---------------------------------------------------
 
   async function attachQueuePhoto(photo, placeId) {
     setQueueError("");
@@ -697,10 +628,7 @@ function TalatNoiApp({ storePromise }) {
     endPlacement();
     setWorkspace(next);
     setCardOpen(false);
-    setStructurePanelOpen(false);
-    setStructurePlacing(false);
     setListOpen(true);
-    if (next === "structures") setView("immersive");
   };
 
   // ----- Keyboard shortcuts ----------------------------------------------------------------
@@ -716,18 +644,7 @@ function TalatNoiApp({ storePromise }) {
         return;
       }
       if (typing) return;
-      if (placement && !addForm) {
-        const onScene = target instanceof Element && target.closest(".three-surface");
-        if (event.key === "Escape") return void (event.preventDefault(), cancelPlacement());
-        if (event.key === "Enter" && !(target instanceof HTMLButtonElement))
-          return void (event.preventDefault(), confirmPlacement());
-        const arrows = { ArrowUp: [1, 0], ArrowDown: [-1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
-        if (arrows[event.key] && !onScene) {
-          event.preventDefault();
-          mapApi.current?.nudge(...arrows[event.key], event.shiftKey ? 5 : nudgeStep);
-        }
-        return;
-      }
+      if ((flatPlacing || pickToMove) && event.key === "Escape") return void (event.preventDefault(), cancelPlacement());
       if (mod && event.key.toLowerCase() === "z") {
         event.preventDefault();
         event.shiftKey ? history.redo() : history.undo();
@@ -750,14 +667,11 @@ function TalatNoiApp({ storePromise }) {
 
   const viewSwitch = (
     <>
-      <button aria-pressed={view === "immersive"} onClick={() => (setView("immersive"), closeMenu())}>
+      <button aria-pressed={view === "digital"} onClick={() => (setView("digital"), closeMenu())}>
         <Icon.Layers size={16} />
-        {tr("Illustrated 3D", "ภาพประกอบ 3 มิติ")}
-      </button>
-      <button aria-pressed={view === "digital"} onClick={() => (setStructurePlacing(false), setView("digital"), closeMenu())}>
         {tr("Illustrated", "ภาพประกอบ")}
       </button>
-      <button aria-pressed={view === "original"} onClick={() => (setStructurePlacing(false), setView("original"), closeMenu())}>
+      <button aria-pressed={view === "original"} onClick={() => (setView("original"), closeMenu())}>
         {tr("Original", "ต้นฉบับ")}
       </button>
       <button onClick={() => (setNavOpen(true), closeMenu())}>
@@ -788,13 +702,6 @@ function TalatNoiApp({ storePromise }) {
       onSelect: () => switchWorkspace("photos"),
       disabled: workspace === "photos",
     },
-    {
-      label: "3D structures",
-      hint: "Move or hide the illustrated landmark models",
-      icon: Icon.Layers,
-      onSelect: () => switchWorkspace("structures"),
-      disabled: workspace === "structures",
-    },
     { label: "Download a backup", hint: "Your current working copy as a file", icon: Icon.Download, onSelect: exportBackup },
     { label: "Import places from a file", hint: "Adds new places only", icon: Icon.Upload, onSelect: () => importRef.current?.click() },
   ];
@@ -816,7 +723,7 @@ function TalatNoiApp({ storePromise }) {
     </footer>
   );
 
-  const showPanel = editing && workspace === "places" && ((cardOpen && selected && !placing) || (addForm && placement));
+  const showPanel = editing && workspace === "places" && ((cardOpen && selected && !placing) || !!addForm);
 
   return (
     <main
@@ -886,7 +793,7 @@ function TalatNoiApp({ storePromise }) {
 
       {editing && (
         <EditorToolbar
-          tool={placement?.kind ?? (pickToMove ? "pick-move" : null)}
+          tool={flatPlacing?.kind ?? (addForm ? "add" : pickToMove ? "pick-move" : null)}
           busy={busy}
           hasSelection={!!selected}
           history={history}
@@ -894,8 +801,8 @@ function TalatNoiApp({ storePromise }) {
           draft={draft}
           storeLabel={store?.label ?? ""}
           moreItems={moreItems}
-          onAddPin={() => (placement?.kind === "add" ? cancelPlacement() : startAddPin())}
-          onMovePin={() => (placement?.kind === "move" || pickToMove ? cancelPlacement() : startMove(selected?.id ?? null))}
+          onAddPin={() => (flatPlacing?.kind === "add" || addForm ? cancelPlacement() : startAddPin())}
+          onMovePin={() => (flatPlacing?.kind === "move" || pickToMove ? cancelPlacement() : startMove(selected?.id ?? null))}
           onSave={() => saveDraft()}
           onRetry={() => saveDraft()}
           onPreview={() => (endPlacement(), setCardOpen(false), setMode("preview"))}
@@ -957,8 +864,6 @@ function TalatNoiApp({ storePromise }) {
           <Icon.List size={18} />
           {editing && workspace === "photos" ? (
             "Photo queue"
-          ) : editing && workspace === "structures" ? (
-            "Structures"
           ) : (
             <>
               {visiblePlaces.length} {tr(visiblePlaces.length === 1 ? "place" : "places", "สถานที่")}
@@ -993,8 +898,6 @@ function TalatNoiApp({ storePromise }) {
             <strong>
               {editing && workspace === "photos" ? (
                 "Fieldwork photo queue"
-              ) : editing && workspace === "structures" ? (
-                "3D structures"
               ) : (
                 <>
                   {visiblePlaces.length}{" "}
@@ -1027,18 +930,7 @@ function TalatNoiApp({ storePromise }) {
               />
             </label>
           )}
-          {editing && workspace === "structures" ? (
-            <>
-              <div className="intro">
-                <p>Move, turn, resize, hide or replace each illustrated object.</p>
-              </div>
-              <StructureList
-                structures={doc.structures}
-                selectedId={selectedStructureId}
-                onSelect={(id) => (setView("immersive"), setSelectedStructureId(id), setStructurePanelOpen(true), setStructurePlacing(false))}
-              />
-            </>
-          ) : editing && workspace === "photos" ? (
+          {editing && workspace === "photos" ? (
             <PhotoQueueList places={doc.places} selectedId={queuePhotoId} onOpen={(id) => (setQueueError(""), setQueuePhotoId(id))} />
           ) : (
             <div className="stop-list" data-testid="place-list">
@@ -1051,7 +943,7 @@ function TalatNoiApp({ storePromise }) {
                     key={place.id}
                     className={`stop ${selectedId === place.id ? "selected" : ""} ${placeIssues ? "has-issues" : ""}`}
                     data-place-id={place.id}
-                    onClick={() => selectPlace(place.id, { focus: editing || view === "immersive" })}
+                    onClick={() => selectPlace(place.id)}
                   >
                     <PlacePhoto place={place} small />
                     <span className="stop-copy">
@@ -1111,58 +1003,22 @@ function TalatNoiApp({ storePromise }) {
             </div>
           )}
           {flatPlacing && (
-            <div className="placement-banner" role="status">
-              Tap the illustration where “{doc.places.find((place) => place.id === flatPlacing.id)?.nameEn}” is.
-              <Button variant="outline" size="sm" onClick={() => (setFlatPlacing(null), setCardOpen(true))}>
+            <div className="placement-banner" role="status" data-testid="placement-banner">
+              {flatPlacing.kind === "add"
+                ? "Tap the illustration where the new place is."
+                : `Tap the illustration where “${doc.places.find((place) => place.id === flatPlacing.id)?.nameEn ?? ""}” should be.`}
+              <Button variant="outline" size="sm" onClick={cancelPlacement} data-testid="placement-cancel">
                 Cancel
               </Button>
             </div>
           )}
           {pickToMove && (
-            <div className="placement-banner" role="status">
+            <div className="placement-banner" role="status" data-testid="placement-banner">
               Tap the pin you want to move.
-              <Button variant="outline" size="sm" onClick={() => setPickToMove(false)}>
+              <Button variant="outline" size="sm" onClick={cancelPlacement}>
                 Cancel
               </Button>
             </div>
-          )}
-          {structurePlacing && selectedStructure && (
-            <div className="placement-banner" role="status">
-              Tap the ground to move “{selectedStructure.label}”.
-              <Button variant="outline" size="sm" onClick={() => (setStructurePlacing(false), setStructurePanelOpen(true))}>
-                Cancel
-              </Button>
-            </div>
-          )}
-          {view === "immersive" && (
-            <Illustrated3DMap
-              location={location}
-              onOpenNavigation={() => (setNavOpen(true), location.usableFix && setCenterRequest((value) => value + 1))}
-              structures={structures}
-              structureEditing={editing && workspace === "structures"}
-              selectedStructureId={selectedStructureId}
-              onSelectStructure={(id) => (setSelectedStructureId(id), setStructurePanelOpen(true), setStructurePlacing(false))}
-              places={places}
-              visibleIds={visiblePlaces.map((place) => place.id)}
-              selectedId={selectedId}
-              lang={lang}
-              placing={structurePlacing}
-              keepExpanded={!editing}
-              onSelect={(id) => selectPlace(id)}
-              onPlace={(position) => {
-                if (!structurePlacing || !selectedStructure) return;
-                changeStructure({ ...position, hidden: false });
-                setStructurePlacing(false);
-                setStructurePanelOpen(true);
-                toast.success("Structure moved in your draft.");
-              }}
-              onFallback={() => setView("digital")}
-              editing={editing}
-              placement={placement}
-              onPlacementChange={setPlacementInfo}
-              onRequestMove={requestMove}
-              apiRef={mapApi}
-            />
           )}
           {(view === "digital" || view === "original") && (
             <p id="map-gesture-hint" className="map-gesture-hint">
@@ -1173,7 +1029,7 @@ function TalatNoiApp({ storePromise }) {
           <div
             className={`map-viewport ${flatPlacing ? "placing" : ""}`}
             ref={viewportRef}
-            style={view === "street" || view === "immersive" ? { display: "none" } : undefined}
+            style={view === "street" ? { display: "none" } : undefined}
             tabIndex={0}
             role="region"
             aria-label={tr("Map canvas", "พื้นที่แผนที่")}
@@ -1203,6 +1059,7 @@ function TalatNoiApp({ storePromise }) {
                       "--leader-angle": `${leader.angle}deg`,
                     }}
                     aria-label={pinAriaLabel(place, lang)}
+                    data-place-id={place.id}
                     onClick={(event) => {
                       if (flatPlacing) return;
                       event.stopPropagation();
@@ -1227,6 +1084,16 @@ function TalatNoiApp({ storePromise }) {
                   </button>
                 );
               })}
+              {editing && Number.isFinite(addForm?.x) && (
+                <span
+                  className="map-marker has-pin is-selected ed-new-pin"
+                  style={{ left: `${addForm.x}%`, top: `${addForm.y}%`, "--marker-size": "36px" }}
+                  aria-hidden="true"
+                  data-testid="new-pin-preview"
+                >
+                  <PinArt place={{ ...createPlaceRecord("new-pin"), category: addForm.category }} lang={lang} />
+                </span>
+              )}
             </div>
           </div>
           {view === "street" && (
@@ -1266,34 +1133,21 @@ function TalatNoiApp({ storePromise }) {
               </button>
             </div>
           )}
-          {editing && placement && !addForm && (
-            <PlacementBar
-              placement={placement}
-              placeName={doc.places.find((place) => place.id === placement.id)?.nameEn ?? ""}
-              info={placementInfo}
-              step={nudgeStep}
-              topView={topView}
-              onStepChange={setNudgeStep}
-              onNudge={(forward, right) => mapApi.current?.nudge(forward, right, nudgeStep)}
-              onTopView={() => {
-                topView ? mapApi.current?.restoreView() : mapApi.current?.topView();
-                setTopView(!topView);
-              }}
-              onConfirm={confirmPlacement}
-              onCancel={cancelPlacement}
-            />
-          )}
         </section>
 
         {showPanel && (
           <aside className="ed-panel" aria-label="Place editor">
             {addForm ? (
               <AddPlaceForm
-                key={`${addForm.lat},${addForm.lng},${addForm.fromPhoto?.id ?? ""}`}
+                key={`${addForm.x},${addForm.y},${addForm.lat},${addForm.lng},${addForm.fromPhoto?.id ?? ""}`}
                 lang={lang}
                 canUploadPhotos={permissions.canUploadPhotos}
                 saving={saveView.state === "saving"}
-                positionLabel={`${addForm.lat.toFixed(6)}, ${addForm.lng.toFixed(6)}`}
+                positionLabel={
+                  Number.isFinite(addForm.x)
+                    ? `${Math.round(addForm.x)}% across, ${Math.round(addForm.y)}% down on the illustration`
+                    : `${addForm.lat.toFixed(6)}, ${addForm.lng.toFixed(6)}`
+                }
                 initial={
                   addForm.fromPhoto
                     ? {
@@ -1303,10 +1157,10 @@ function TalatNoiApp({ storePromise }) {
                         photoAlt: addForm.fromPhoto.alt,
                         photoSource: addForm.fromPhoto.asset,
                       }
-                    : { category: placement?.category }
+                    : { category: addForm.category }
                 }
                 onUploadingChange={setPhotoUploading}
-                onCategoryChange={(value) => setPlacement((current) => (current ? { ...current, category: value } : current))}
+                onCategoryChange={(value) => setAddForm((current) => (current ? { ...current, category: value } : current))}
                 onSubmit={submitNewPlace}
                 onCancel={cancelPlacement}
               />
@@ -1320,8 +1174,6 @@ function TalatNoiApp({ storePromise }) {
                 issues={showIssues ? issues?.byPlace[selected.id] ?? {} : {}}
                 onChange={changeSelected}
                 onMove={() => startMove(selected.id)}
-                onFocus={() => (setView("immersive"), mapApi.current?.focus(selected.id))}
-                onPlaceOnIllustration={() => placeOnIllustration(selected.id)}
                 onSetOnNavigationMap={() => (setNavPlacing({ kind: "place", id: selected.id }), setNavOpen(true))}
                 onDelete={() => setDeleteTarget(selected.id)}
                 onClose={closeCard}
@@ -1354,22 +1206,20 @@ function TalatNoiApp({ storePromise }) {
           />
         )}
         <details className="geographic-notes">
-          <summary>{tr("Street layout, buildings & field checks", "ผังถนน อาคาร และจุดที่ต้องตรวจ")}</summary>
+          <summary>{tr("Street layout & field checks", "ผังถนนและจุดที่ต้องตรวจ")}</summary>
           <p>
             {tr(
-              "Illustrated 3D model · connected street ground · approximate architecture",
-              "แบบจำลอง 3 มิติ · พื้นถนนเชื่อมต่อกัน · สถาปัตยกรรมโดยประมาณ",
+              "Hand-drawn illustration · mapped streets for navigation · approximate positions",
+              "ภาพวาดประกอบ · ถนนจากแผนที่สำหรับการนำทาง · ตำแหน่งโดยประมาณ",
             )}
           </p>
           <p>
-            Roads, shared alleys, footways and steps use mapped centerlines and shared junction nodes inside the red
-            district boundary. Neutral paving is part of the 3D ground. Ordinary buildings follow mapped footprints,
-            with space reserved for the separate illustrated landmark models.
+            The illustrated maps are artwork: pin positions on them are schematic. The navigation map and walking
+            directions use mapped roads, shared alleys, footways and steps inside the red district boundary.
           </p>
           <p>
-            Widths without mapped measurements, building heights, roofs, frontage details and fitted visual landmark
-            positions remain approximate. Restricted, covered, unconfirmed and conflicting passages are excluded from
-            walking directions. Saved visitor coordinates stay separate from 3D building objects.
+            Restricted, covered, unconfirmed and conflicting passages are excluded from walking directions. Places
+            without confirmed coordinates are not used for directions.
           </p>
         </details>
         <ArchitectureNotes lang={lang} />
@@ -1386,37 +1236,6 @@ function TalatNoiApp({ storePromise }) {
           onClose={closeCard}
           onSelect={(id) => selectPlace(id)}
         />
-      )}
-
-      {editing && (
-        <Sheet open={structurePanelOpen && !!selectedStructure} onOpenChange={setStructurePanelOpen}>
-          <SheetContent side={isMobile ? "bottom" : "right"} showCloseButton={false} className="place-sheet editor-sheet">
-            <div className="sheet-close">
-              <Button variant="outline" size="icon" aria-label="Close structure editor" onClick={() => setStructurePanelOpen(false)}>
-                <Icon.X />
-              </Button>
-            </div>
-            <SheetTitle className="sr-only">{selectedStructure?.label || "3D structure"}</SheetTitle>
-            <SheetDescription className="sr-only">Edit this separate 3D structure in the shared draft.</SheetDescription>
-            {selectedStructure && (
-              <>
-                <StructureEditor
-                  structure={selectedStructure}
-                  onChange={changeStructure}
-                  busy={busy}
-                  onPlaceGeographic={() => (setNavPlacing({ kind: "structure", id: selectedStructure.id }), setNavOpen(true), setStructurePanelOpen(false))}
-                  onPlace={() => (setView("immersive"), setStructurePlacing(true), setStructurePanelOpen(false))}
-                />
-                <div className="structure-save">
-                  <Button onClick={() => saveDraft()} disabled={busy || saveView.state === "saved"}>
-                    Save draft
-                  </Button>
-                  <span>{saveView.state === "saved" ? "Draft saved" : "Unsaved changes"}</span>
-                </div>
-              </>
-            )}
-          </SheetContent>
-        </Sheet>
       )}
 
       {editing && (

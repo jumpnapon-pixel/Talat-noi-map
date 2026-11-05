@@ -30,7 +30,6 @@ const APP_FILES = [
   "src/app/fields.jsx",
   "src/app/place-panel.jsx",
   "src/app/editor-toolbar.jsx",
-  "src/app/placement-bar.jsx",
   "src/app/App.jsx",
   "src/app/entry.js",
 ];

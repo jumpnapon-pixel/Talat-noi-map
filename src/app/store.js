@@ -131,10 +131,13 @@ class ArtifactMapStore {
   }
 
   // A short cooperative lease so that two editors saving at the same moment cannot
-  // overwrite each other between the revision check and the write.
+  // overwrite each other between the revision check and the write. Leases have no release:
+  // retrying for a little longer than one lease lasts means a lease left by a page that was
+  // just reloaded (a new holder) always expires before this gives up.
   async withLock(task) {
     let acquired = false;
-    for (let attempt = 0; attempt < 5 && !acquired; attempt++) {
+    const giveUpAt = Date.now() + LOCK_TTL_MS + 1500;
+    for (let attempt = 0; !acquired; attempt++) {
       try {
         const result = await this.lockRef.acquire({ holder: tabHolder, ttlMs: LOCK_TTL_MS });
         acquired = !!result?.acquired;
@@ -145,7 +148,10 @@ class ArtifactMapStore {
         }
         throw error;
       }
-      if (!acquired) await sleep(500 + attempt * 500);
+      if (acquired) break;
+      const wait = Math.min(500 + attempt * 500, giveUpAt - Date.now());
+      if (wait <= 0) break;
+      await sleep(wait);
     }
     if (!acquired)
       throw new StoreError("busy", "Another editor is saving right now. Try again in a few seconds.");

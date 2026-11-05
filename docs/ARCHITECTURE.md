@@ -8,8 +8,8 @@ The published map is a single file, `index.html`, plus `assets/` (photos and art
 
 | Path | What it is |
 | --- | --- |
-| `src/recovered/01-libraries-and-scene.js` | Runtime and libraries (React 19, three.js, Radix UI, zod, lucide), geography helpers and the 3D scene builder, recovered from the original compiled bundle |
-| `src/recovered/02-app-components.js` | The map's own components: place schema, 3D map, navigation and street maps, place card, structure and photo-queue editors |
+| `src/recovered/01-libraries-and-scene.js` | Runtime and libraries (React 19, three.js, Radix UI, zod, lucide), geography helpers and the 3D scene builder, recovered from the original compiled bundle. The 3D parts are no longer used (see "The removed 3D view") |
+| `src/recovered/02-app-components.js` | The map's own components: place schema, navigation and street maps, place card, photo-queue editor, and the unused 3D map and structure editor |
 | `src/app/*.js(x)` | Readable app code: app shell, editor UI, storage, undo/redo |
 | `src/data/published-seed.json` | The published edition built into the page (shown until the shared database answers, and on hosts without one) |
 | `src/styles/app.css` | Recovered Tailwind and app styles |
@@ -26,41 +26,30 @@ original minified names. The build concatenates the recovered files and the app 
 
 | Alias | Recovered name | |
 | --- | --- | --- |
-| `Illustrated3DMap` | `fE` | the illustrated 3D map (three.js) |
 | `NavigationMap` | `pE` | the geographic navigation map |
 | `VisitorPlaceCard` | `mE` | the visitor's place card |
 | `PhotoUploader` | `z3` | photo picker with resize and upload |
 | `PlacesSchema` | `W1` | zod schema for places |
 | `createPlaceRecord` | `Ng` | a new place with every field filled |
-| `sceneFromLatLng` / `latLngFromScene` | `cu` / `R3` | geographic ↔ 3D scene conversions |
 
 ## Positions
 
 Each place has two independent positions (see `src/app/geo.js`):
 
-- **Real location**: `lat`, `lng`. The 3D scene is built from OpenStreetMap data in a local
-  metric projection (origin 13.734 N, 100.5129 E, 10 m per unit, rotated into the scene), so
-  every point on its ground converts exactly to latitude and longitude. Moving or adding a
-  pin on the 3D map saves these. They also drive the navigation map, street map and walking
-  directions.
-- **Flat illustration**: `x`, `y` as percentages (2–98) of the hand-drawn artwork used by
-  the "Illustrated" and "Original" views. The artwork is stylised and rotated: the existing
-  places' artwork positions are 130–860 m away from their real location when mapped
-  linearly, and a fitted transform is still 15% off on average. They are therefore edited
-  separately and a 3D move never changes them. New places start at the artwork position
-  of the geographically nearest place, flagged `illustrationEstimated`.
+- **Pin on the illustration**: `x`, `y` as percentages (2–98) of the hand-drawn artwork used
+  by the "Illustrated" and "Original" views. **Add pin** and **Move pin** set these: the
+  editor taps the illustration and the tap is converted to percentages of the artwork
+  (`handleFlatMapClick` in `src/app/App.jsx`). Pins closer than 52 px are spread apart with
+  a leader line (`spreadMarkers`).
+- **Real location**: `lat`, `lng`, used by the navigation map, street map and walking
+  directions. Set with **Set real location** (a tap on the navigation map) or typed in. A new
+  place has none (`null`) until an editor sets it, and is left out of navigation until then.
 
-Pin placement (`Illustrated3DMap`, the "Talat Noi editor" blocks in
-`src/recovered/02-app-components.js`):
-
-- The pointer is projected onto the ground plane. A point inside a building footprint or a
-  3D landmark model moves to the nearest open ground; a point outside the red coverage
-  boundary moves just inside it.
-- While a pin is dragged, OrbitControls is disabled and the pointer captured, so the camera
-  cannot rotate. Controls are restored when the drag ends or is cancelled.
-- Pins are drawn as HTML markers projected from 3D anchors on every frame, so they stay on
-  their ground point as the camera rotates and zooms. Pins are rebuilt on their own
-  (`setPlaces`) when places change, without rebuilding the neighbourhood.
+The artwork is stylised and rotated: the existing places' artwork positions are 130–860 m
+away from their real location when mapped linearly, and a fitted transform is still 15% off
+on average. So neither position is computed from the other. A place created from the
+navigation map (fieldwork photo queue) starts at the artwork position of the geographically
+nearest place, flagged `illustrationEstimated`.
 
 ## Storage, drafts and publishing
 
@@ -76,11 +65,12 @@ Database documents (artifact):
 
 | Document | Who reads | Who writes | Contents |
 | --- | --- | --- | --- |
-| `map/published` | everyone | Editors, Owner | the visitor edition: approved places and 3D structures |
+| `map/published` | everyone | Editors, Owner | the visitor edition: approved places (plus the old 3D structures list, kept for compatibility) |
 | `map/draft` | Editors, Owner | Editors, Owner | the shared draft (all places), `revision`, `publishedRevision` |
 | `map/lock` | Editors, Owner | Editors, Owner | short lease used while saving or publishing |
 
-- **Save draft** takes the lease, re-reads the draft and only writes if its `revision` is
+- **Save draft** takes the lease (retrying for a little longer than a lease lasts, since
+  leases have no release and a reloaded page gets a new holder), re-reads the draft and only writes if its `revision` is
   still the one the editor started from. Otherwise it reports a conflict and keeps the
   editor's changes. The editor can then download them, load the newer draft, or replace it.
 - **Publish** copies the approved places of the *saved* draft to `map/published` and
@@ -104,6 +94,21 @@ Each change is marked with a "Talat Noi editor" comment.
   nudge, top-down view, overlapping-pin chooser, imperative `apiRef`, tap detection that
   uses event timestamps.
 - Place card: shows the photo caption.
+- Photo queue: the "Place on 3D map" button now reads "Place on illustration".
 
 The original app shell (minified `yE`) and its `fetch` shim for `/api/*` were replaced by
 `src/app/App.jsx` and `src/app/store.js`.
+
+## The removed 3D view
+
+The map used to open on an interactive "Illustrated 3D" view (three.js), where editors also
+dragged pins and arranged the illustrated landmark models ("3D structures"). That view was
+removed: the map now opens on the "Illustrated" view, and pins are placed on the
+illustration.
+
+- The app no longer renders `fE` (the 3D map) or the structure editor, and the
+  `placement-bar.jsx` controls (nudge arrows, top-down view, Confirm position) are gone.
+- The recovered 3D code and three.js are still in `src/recovered/`, unused. Removing them
+  would make the page smaller.
+- Saved drafts and published editions still carry a `structures` list. It is validated and
+  saved unchanged so older data keeps loading, but nothing shows it.

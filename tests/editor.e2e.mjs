@@ -128,16 +128,21 @@ async function openPage(browser, { role = "editor", device = null, fresh = false
     await tab.evaluate(() => localStorage.clear());
     await tab.reload({ waitUntil: "networkidle" });
   }
-  await tab.waitForSelector(".three-marker:not([hidden])", { timeout: 30000 });
-  await tab.waitForTimeout(800);
+  await waitForMap(tab);
   return { context, tab, errors };
+}
+
+async function waitForMap(tab) {
+  await tab.waitForSelector(".map-marker[data-place-id]", { timeout: 30000 });
+  await tab.waitForTimeout(500);
 }
 
 const fakeDb = (tab, path) => tab.evaluate((p) => JSON.parse(localStorage.getItem(`fake-db:${p}`) || "null"), path);
 const saveState = (tab) => tab.locator("[data-testid=save-status]").getAttribute("data-state");
-const compass = (tab) => tab.locator(".scene-compass").innerText();
-const markerBox = (tab, id) => tab.locator(`.three-marker[data-place-id="${id}"]`).boundingBox();
+const marker = (tab, id) => tab.locator(`.map-marker[data-place-id="${id}"]`);
 const realLocation = (tab) => tab.locator("[data-testid=real-location]").innerText();
+const illustrationPosition = (tab) => tab.locator("[data-testid=illustration-position]").innerText();
+const closePanel = (tab) => tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
 
 async function enterEditor(tab) {
   await tab.click("[data-testid=edit-map]");
@@ -145,40 +150,32 @@ async function enterEditor(tab) {
   await tab.waitForTimeout(600);
 }
 
-async function selectPin(tab, id) {
-  const box = await markerBox(tab, id);
-  await tab.mouse.click(box.x + box.width / 2, box.y + 22);
+async function selectPin(tab, id, { touch = false } = {}) {
+  const box = await marker(tab, id).boundingBox();
+  touch ? await tab.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2) : await marker(tab, id).click();
   await tab.waitForSelector("[data-testid=place-panel]", { timeout: 5000 });
+}
+
+// A point on the illustration, as fractions of the visible part of the map.
+async function illustrationPoint(tab, fx, fy) {
+  const view = await tab.locator(".map-viewport").boundingBox();
+  const art = await tab.locator(".map-canvas").boundingBox();
+  const left = Math.max(view.x, art.x);
+  const top = Math.max(view.y, art.y);
+  const right = Math.min(view.x + view.width, art.x + art.width);
+  const bottom = Math.min(view.y + view.height, art.y + art.height);
+  return { x: left + (right - left) * fx, y: top + (bottom - top) * fy };
+}
+
+async function tapIllustration(tab, fx, fy, { touch = false } = {}) {
+  const point = await illustrationPoint(tab, fx, fy);
+  touch ? await tab.touchscreen.tap(point.x, point.y) : await tab.mouse.click(point.x, point.y);
+  await tab.waitForTimeout(300);
 }
 
 async function waitSaved(tab) {
   await tab.waitForFunction(() => document.querySelector("[data-testid=save-status]")?.dataset.state !== "saving", null, { timeout: 15000 });
   return saveState(tab);
-}
-
-// Pointer drag dispatched as real input (mouse) or as touch pointer events.
-async function dragPin(tab, from, to, { touch = false } = {}) {
-  if (!touch) {
-    await tab.mouse.move(from.x, from.y);
-    await tab.mouse.down();
-    for (let i = 1; i <= 12; i++) await tab.mouse.move(from.x + ((to.x - from.x) * i) / 12, from.y + ((to.y - from.y) * i) / 12);
-    await tab.mouse.up();
-    return;
-  }
-  await tab.evaluate(
-    async ({ from, to }) => {
-      const target = document.elementFromPoint(from.x, from.y);
-      const fire = (el, type, x, y) =>
-        el.dispatchEvent(new PointerEvent(type, { pointerId: 7, pointerType: "touch", isPrimary: true, clientX: x, clientY: y, bubbles: true, cancelable: true, button: 0 }));
-      fire(target, "pointerdown", from.x, from.y);
-      for (let i = 1; i <= 12; i++) {
-        fire(target, "pointermove", from.x + ((to.x - from.x) * i) / 12, from.y + ((to.y - from.y) * i) / 12);
-        await new Promise((r) => requestAnimationFrame(r));
-      }
-      fire(target, "pointerup", to.x, to.y);
-    },
-    { from, to },
-  );
 }
 
 function tinyPng() {
@@ -192,10 +189,13 @@ function tinyPng() {
 // ---- scenarios --------------------------------------------------------------------------------
 const browser = await chromium.launch();
 try {
-  // 1. Visitors: no editing controls, published map intact.
+  // 1. Visitors: the illustrated map, no 3D view, no editing controls.
   if (only.includes("visitor")) {
     const { context, tab, errors } = await openPage(browser, { role: "viewer", fresh: true });
-    check((await tab.locator(".three-marker:not([hidden])").count()) >= 10, "visitor map shows the illustrated 3D pins");
+    check((await tab.locator(".map-marker[data-place-id]").count()) >= 10, "visitor map shows the place pins on the illustration");
+    check((await tab.locator(".filter-bar .view-switch button[aria-pressed=true]").innerText()).trim() === "Illustrated", "the map opens on the Illustrated view");
+    const views = (await tab.locator(".filter-bar .view-switch button").allInnerTexts()).map((text) => text.trim());
+    check(!views.some((text) => /3D/.test(text)) && (await tab.locator("canvas").count()) === 0, "there is no 3D view", views.join(", "));
     check((await tab.locator("[data-testid=edit-map]").count()) === 0, "viewers do not get an Edit map button");
     const draftVisible = await tab.evaluate(async () => (await (await window.claude.use("db")).doc("map/draft").get()).exists);
     check(!draftVisible, "the draft is not readable by viewers");
@@ -208,6 +208,9 @@ try {
       }
     });
     check(denied, "viewers cannot write the published map");
+    await marker(tab, "so-heng-tai").click();
+    await tab.waitForTimeout(500);
+    check((await tab.locator(".map-marker.is-selected").count()) === 1, "visitors can open a place from its pin");
     check(errors.length === 0, "no page errors for visitors", errors.join(" | "));
     await tab.screenshot({ path: join(shots, "01-visitor.png") });
     await context.close();
@@ -221,86 +224,70 @@ try {
   check(await tab.locator("[data-testid=editor-toolbar]").isVisible(), "editing toolbar is shown");
   for (const [id, label] of [["tool-add-pin", "Add pin"], ["tool-move-pin", "Move pin"], ["tool-undo", "Undo"], ["tool-redo", "Redo"], ["tool-save", "Save draft"], ["tool-preview", "Preview"], ["tool-publish", "Publish"]])
     check((await tab.locator(`[data-testid=${id}]`).innerText()).includes(label), `toolbar has ${label}`);
+  await tab.click("[data-testid=more-tools]");
+  check((await tab.getByText("3D structures").count()) === 0, "the 3D structures tool is gone");
+  await tab.keyboard.press("Escape");
   check((await saveState(tab)) === "saved", "starts in the Saved state");
   await tab.screenshot({ path: join(shots, "02-editor.png") });
 
   // Select and highlight a pin.
   await selectPin(tab, "so-heng-tai");
-  check(await tab.locator('.three-marker[data-place-id="so-heng-tai"]').evaluate((el) => el.classList.contains("selected")), "clicking a pin selects and highlights it");
+  check(await marker(tab, "so-heng-tai").evaluate((el) => el.classList.contains("is-selected")), "clicking a pin selects and highlights it");
   check((await tab.locator("[data-testid=place-panel] h2").innerText()).includes("So Heng Tai"), "the editing panel opens for that place");
   const startLocation = await realLocation(tab);
-  const illustrationBefore = await tab.locator(".ed-position-card").nth(1).locator(".ed-position-value").innerText();
+  const startIllustration = await illustrationPosition(tab);
 
-  // Drag the selected pin: camera stays still during the drag.
-  const angleBefore = await compass(tab);
+  // Move the pin: Move pin → tap the illustration.
   await tab.click("[data-testid=panel-move-pin]");
-  await tab.waitForSelector("[data-testid=placement-bar]");
-  let box = await markerBox(tab, "so-heng-tai");
-  await dragPin(tab, { x: box.x + box.width / 2, y: box.y + 22 }, { x: box.x + box.width / 2 + 70, y: box.y + 22 + 30 });
-  await tab.waitForTimeout(400);
-  check((await compass(tab)) === angleBefore, "camera does not rotate while a pin is dragged", `${angleBefore} -> ${await compass(tab)}`);
-  const dragged = await tab.locator("[data-testid=pending-coordinates]").innerText();
-  check(!startLocation.startsWith(dragged.slice(0, 9)) || dragged !== startLocation, "dragging shows a live placement preview", dragged);
-  check(await tab.locator("[data-testid=placement-confirm]").isEnabled(), "Confirm position is available after dragging");
-  await tab.screenshot({ path: join(shots, "03-dragging.png") });
-
-  // Nudge and top-down view.
-  await tab.click("[data-testid=top-view]");
-  await tab.waitForTimeout(500);
-  const beforeNudge = await tab.locator("[data-testid=pending-coordinates]").innerText();
-  await tab.click('button[aria-label="Nudge right by 1 m"]');
-  await tab.click('button[aria-label="Nudge right by 1 m"]');
-  await tab.waitForTimeout(200);
-  check((await tab.locator("[data-testid=pending-coordinates]").innerText()) !== beforeNudge, "arrow buttons nudge the pin");
-  await tab.screenshot({ path: join(shots, "04-top-down.png") });
-  await tab.click("[data-testid=placement-confirm]");
+  await tab.waitForSelector("[data-testid=placement-banner]");
+  check((await tab.locator("[data-testid=place-panel]").count()) === 0, "Move pin hides the panel and asks for a tap");
+  await tab.screenshot({ path: join(shots, "03-move-pin.png") });
+  await tapIllustration(tab, 0.3, 0.7);
   await tab.waitForSelector("[data-testid=place-panel]");
-  const moved = await realLocation(tab);
-  check(moved !== startLocation, "Confirm saves the new real location", `${startLocation} -> ${moved}`);
-  check((await tab.locator(".ed-position-card").nth(1).locator(".ed-position-value").innerText()) === illustrationBefore, "the flat-illustration position is not changed by a 3D move");
+  const moved = await illustrationPosition(tab);
+  check(moved !== startIllustration, "tapping the illustration moves the pin", `${startIllustration} -> ${moved}`);
+  check((await realLocation(tab)) === startLocation, "moving the pin does not change the real location");
   check((await saveState(tab)) === "unsaved", "status shows Unsaved changes");
 
-  // Normal camera controls are back after the move.
-  const surface = await tab.locator(".three-surface").boundingBox();
-  await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
-  const angle1 = await compass(tab);
-  await tab.mouse.move(surface.x + 120, surface.y + surface.height - 140);
-  await tab.mouse.down();
-  for (let i = 1; i <= 10; i++) await tab.mouse.move(surface.x + 120 + i * 25, surface.y + surface.height - 140);
-  await tab.mouse.up();
-  await tab.waitForTimeout(500);
-  check((await compass(tab)) !== angle1, "map rotation works again after moving a pin", `${angle1} -> ${await compass(tab)}`);
-  await tab.click('[aria-label="Reset 3D view"]');
-  await tab.waitForTimeout(500);
-
-  // Cancel a move: Move pin → tap destination → Cancel.
+  // Cancel a move.
+  await closePanel(tab);
   await selectPin(tab, "rong-kueak");
-  const rongBefore = await realLocation(tab);
+  const rongBefore = await illustrationPosition(tab);
   await tab.click("[data-testid=tool-move-pin]");
-  await tab.waitForSelector("[data-testid=placement-bar]");
-  box = await markerBox(tab, "rong-kueak");
-  await tab.mouse.click(box.x + box.width / 2 - 60, box.y + 80);
-  await tab.waitForTimeout(300);
-  check((await tab.locator("[data-testid=pending-coordinates]").count()) === 1, "tapping the destination places a preview");
+  await tab.waitForSelector("[data-testid=placement-banner]");
   await tab.click("[data-testid=placement-cancel]");
   await tab.waitForSelector("[data-testid=place-panel]");
-  check((await realLocation(tab)) === rongBefore, "Cancel keeps the original position", rongBefore);
-
-  // Tap-to-place + confirm, then undo / redo.
+  check((await illustrationPosition(tab)) === rongBefore, "Cancel keeps the original position", rongBefore);
   await tab.click("[data-testid=panel-move-pin]");
-  box = await markerBox(tab, "rong-kueak");
-  await tab.mouse.click(box.x + box.width / 2 + 50, box.y + 90);
-  await tab.waitForTimeout(300);
-  await tab.click("[data-testid=placement-confirm]");
+  await tab.keyboard.press("Escape");
   await tab.waitForSelector("[data-testid=place-panel]");
-  const rongMoved = await realLocation(tab);
-  check(rongMoved !== rongBefore, "Move pin → tap → Confirm position moves the pin");
+  check((await tab.locator("[data-testid=placement-banner]").count()) === 0, "Escape also cancels a move");
+
+  // Move, then undo / redo.
+  await tab.click("[data-testid=panel-move-pin]");
+  await tapIllustration(tab, 0.62, 0.35);
+  await tab.waitForSelector("[data-testid=place-panel]");
+  const rongMoved = await illustrationPosition(tab);
+  check(rongMoved !== rongBefore, "Move pin → tap moves the pin");
   await tab.click("[data-testid=tool-undo]");
   await tab.waitForTimeout(200);
-  check((await realLocation(tab)) === rongBefore, "Undo restores the previous position");
+  check((await illustrationPosition(tab)) === rongBefore, "Undo restores the previous position");
   await tab.click("[data-testid=tool-redo]");
   await tab.waitForTimeout(200);
-  check((await realLocation(tab)) === rongMoved, "Redo re-applies the move");
+  check((await illustrationPosition(tab)) === rongMoved, "Redo re-applies the move");
+
+  // Real location from the navigation map.
+  const rongLocation = await realLocation(tab);
+  await tab.click("[data-testid=panel-set-location]");
+  await tab.waitForSelector(".navigation-map-canvas svg", { timeout: 15000 });
+  await tab.waitForTimeout(500);
+  const nav = await tab.locator(".navigation-map-canvas").boundingBox();
+  await tab.mouse.click(nav.x + nav.width * 0.5, nav.y + nav.height * 0.5);
+  await tab.waitForSelector("[data-testid=place-panel]");
+  await tab.waitForTimeout(300);
+  const rongNewLocation = await realLocation(tab);
+  check(rongNewLocation !== rongLocation && /^\d+\.\d+, \d+\.\d+$/.test(rongNewLocation), "the navigation map sets the real location", `${rongLocation} -> ${rongNewLocation}`);
+  check((await illustrationPosition(tab)) === rongMoved, "setting the real location keeps the pin on the illustration");
 
   // Edit details (grouped into one undo step).
   const nameInput = tab.locator("[data-testid=place-panel] input[name=nameEn]");
@@ -308,7 +295,6 @@ try {
   await nameInput.fill("Rong Kueak Shrine (Shoe Shrine)");
   await tab.locator("[data-testid=place-panel] textarea[name=storyEn]").fill("Edited story for the test.");
   check((await tab.locator('.stop[data-place-id="rong-kueak"] strong').innerText()).includes("Shoe Shrine"), "editing the name updates the list");
-  await tab.locator("body").click({ position: { x: 5, y: 5 } }).catch(() => {});
 
   // Photo: upload, preview, caption/alt/credit.
   await tab.locator("[data-testid=photo-section] input[type=file]").setInputFiles({ name: "shrine.png", mimeType: "image/png", buffer: tinyPng() });
@@ -317,7 +303,7 @@ try {
   await tab.locator("[data-testid=place-panel] input[name=photoCaption]").fill("Shrine gate at dusk");
   await tab.locator("[data-testid=place-panel] input[name=photoAlt]").fill("Red shrine gate with lanterns");
   await tab.locator("[data-testid=place-panel] input[name=photoCredit]").fill("Photo by Test");
-  await tab.screenshot({ path: join(shots, "05-panel-photo.png") });
+  await tab.screenshot({ path: join(shots, "04-panel-photo.png") });
 
   // Save draft.
   await tab.click("[data-testid=tool-save]");
@@ -331,44 +317,48 @@ try {
 
   // Refresh: the pin and photo come back from the saved draft.
   await tab.reload({ waitUntil: "networkidle" });
-  await tab.waitForSelector(".three-marker:not([hidden])");
+  await waitForMap(tab);
   await enterEditor(tab);
   await selectPin(tab, "rong-kueak");
-  check((await realLocation(tab)) === rongMoved, "after refresh the pin is at its saved position", await realLocation(tab));
+  check((await illustrationPosition(tab)) === rongMoved, "after refresh the pin is at its saved position", await illustrationPosition(tab));
+  check((await realLocation(tab)) === rongNewLocation, "after refresh the real location is kept");
   check(await tab.locator("[data-testid=photo-section] img.place-photo[src*='/_blob/']").isVisible(), "after refresh the uploaded photo is shown");
-  await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
+  await closePanel(tab);
 
   // Add a pin.
   await tab.click("[data-testid=tool-add-pin]");
-  await tab.waitForSelector("[data-testid=placement-bar]");
-  check(!(await tab.locator("[data-testid=placement-confirm]").isEnabled()), "Add pin waits for a tap on the map");
-  await tab.mouse.click(surface.x + surface.width * 0.52, surface.y + surface.height * 0.48);
-  await tab.waitForTimeout(400);
-  check(await tab.locator(".three-ghost-pin:not([hidden])").isVisible(), "a preview pin shows where the new place goes");
-  await tab.screenshot({ path: join(shots, "06-add-pin.png") });
-  await tab.click("[data-testid=placement-confirm]");
+  await tab.waitForSelector("[data-testid=placement-banner]");
+  check((await tab.locator("[data-testid=add-place-form]").count()) === 0, "Add pin waits for a tap on the illustration");
+  await tapIllustration(tab, 0.45, 0.55);
   await tab.waitForSelector("[data-testid=add-place-form]");
+  check(await tab.locator("[data-testid=new-pin-preview]").isVisible(), "a preview pin shows where the new place goes");
   await tab.click("[data-testid=add-place-submit]");
   check(await tab.locator("[data-testid=add-place-form] .ed-error").isVisible(), "the short form asks for a name");
   await tab.locator("[data-testid=add-place-form] input[name=nameEn]").fill("Test Noodle Shop");
   await tab.locator("[data-testid=add-place-form] label:has-text('Food & drink')").click();
-  await tab.screenshot({ path: join(shots, "07-add-form.png") });
+  await tab.screenshot({ path: join(shots, "05-add-form.png") });
   await tab.click("[data-testid=add-place-submit]");
-  check((await waitSaved(tab)) === "saved", "Add place saves the draft");
+  check((await waitSaved(tab)) === "saved", "Add place saves the draft (also right after a reload)");
   draft = await fakeDb(tab, "map/draft");
   const added = draft.places.find((place) => place.id === "test-noodle-shop");
-  check(!!added && added.category === "Food & drink" && Number.isFinite(added.lat) && added.illustrationEstimated === true, "new place is stored with coordinates and a readable ID", added && `${added.lat}, ${added.lng}`);
+  check(
+    !!added && added.category === "Food & drink" && Number.isFinite(added.x) && added.illustrationEstimated === false && added.lat === null,
+    "new place is stored at the tapped spot with a readable ID, real location still to set",
+    added && `${added.x}, ${added.y}`,
+  );
   check(await tab.locator('.stop[data-place-id="test-noodle-shop"]').isVisible(), "new place appears in the searchable list");
+  check(await marker(tab, "test-noodle-shop").isVisible(), "new place has a pin on the illustration");
+  check((await tab.locator("[data-testid=place-panel] .ed-note", { hasText: "navigation map and directions" }).count()) === 1, "the panel says the real location is not set yet");
 
-  // Search the list and focus a pin from it.
+  // Search the list and select a pin from it.
   await tab.locator("[data-testid=list-search]").fill("holy");
   check((await tab.locator(".stop-list .stop").count()) === 1, "the place list can be searched");
   await tab.locator('.stop[data-place-id="holy-rosary"]').click();
-  await tab.waitForTimeout(700);
-  check(await tab.locator('.three-marker[data-place-id="holy-rosary"]').evaluate((el) => el.classList.contains("selected")), "choosing a list entry highlights its pin");
+  await tab.waitForTimeout(300);
+  check(await marker(tab, "holy-rosary").evaluate((el) => el.classList.contains("is-selected")), "choosing a list entry highlights its pin");
   await tab.locator("[data-testid=list-search]").fill("");
 
-  // Delete with confirmation, undo, delete again.
+  // Delete with confirmation, undo.
   await tab.locator('.stop[data-place-id="test-noodle-shop"]').click();
   await tab.click("[data-testid=delete-place]");
   check(await tab.locator("[data-testid=delete-dialog]").isVisible(), "deleting asks for confirmation");
@@ -379,42 +369,24 @@ try {
   await tab.waitForTimeout(200);
   check((await tab.locator('.stop[data-place-id="test-noodle-shop"]').count()) === 1, "Undo brings a deleted place back");
 
-  // Overlapping pins: put two places on the same spot.
+  // Pins on the same spot are spread apart; clicking the selected pin does not start a move.
+  const holyBox = await marker(tab, "holy-rosary").boundingBox();
   await tab.locator('.stop[data-place-id="old-bank"]').click();
-  await tab.locator("[data-testid=position-section] summary").click();
-  await tab.locator("[data-testid=place-panel] input[name=lat]").fill("13.73555");
-  await tab.locator("[data-testid=place-panel] input[name=lng]").fill("100.51418");
-  await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
-  await tab.locator('.stop[data-place-id="holy-rosary"]').click(); // focuses the shared spot
-  await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
-  await tab.waitForTimeout(800);
-  // Tap the ground just below the shared spot, where both pins' ground points are.
-  const spot = await tab.evaluate(() => {
-    const surface = document.querySelector(".three-surface").getBoundingClientRect();
-    const markers = ["old-bank", "holy-rosary"].map((id) => document.querySelector(`.three-marker[data-place-id="${id}"]`));
-    const still = markers.find((el) => !el.classList.contains("moved")) ?? markers[0];
-    return { x: surface.left + parseFloat(still.style.left), y: surface.top + parseFloat(still.style.top), spread: markers.some((el) => el.classList.contains("moved")) };
-  });
-  check(spot.spread, "pins on the same spot are spread apart with a leader line");
-  await tab.mouse.click(spot.x, spot.y + 22);
+  await tab.click("[data-testid=panel-move-pin]");
+  await tab.mouse.click(holyBox.x + holyBox.width / 2, holyBox.y + holyBox.height / 2);
+  await tab.waitForSelector("[data-testid=place-panel]");
   await tab.waitForTimeout(300);
-  const chooser = await tab.locator(".pin-chooser").count();
-  check(chooser === 1, "overlapping pins offer a list to pick one");
-  if (chooser) {
-    await tab.screenshot({ path: join(shots, "08-overlap-chooser.png") });
-    await tab.locator(".pin-chooser button", { hasText: "Old Commercial Quarter" }).click();
-    await tab.waitForSelector("[data-testid=place-panel]");
-    check((await tab.locator("[data-testid=place-panel] h2").innerText()).includes("Old Commercial"), "choosing from the list selects that pin");
-  }
-  // A plain click on the selected pin keeps it selected and does not start a move.
-  const oldBank = await markerBox(tab, "old-bank");
-  await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
-  await tab.mouse.click(oldBank.x + oldBank.width / 2, oldBank.y + 22);
+  const spread = await tab.evaluate(() => ["old-bank", "holy-rosary"].some((id) => document.querySelector(`.map-marker[data-place-id="${id}"]`).classList.contains("moved")));
+  check(spread, "pins on the same spot are spread apart with a leader line");
+  await tab.screenshot({ path: join(shots, "06-overlap.png") });
+  await closePanel(tab);
+  await marker(tab, "old-bank").click();
+  await tab.waitForSelector("[data-testid=place-panel]");
+  await marker(tab, "old-bank").click({ force: true });
   await tab.waitForTimeout(300);
-  check((await tab.locator("[data-testid=placement-bar]").count()) === 0, "clicking the selected pin does not start a move");
-  await tab.locator("[data-testid=place-panel] [aria-label='Close place panel']").click().catch(() => {});
-  await tab.click("[data-testid=tool-undo]"); // undo longitude
-  await tab.click("[data-testid=tool-undo]"); // undo latitude
+  check((await tab.locator("[data-testid=placement-banner]").count()) === 0, "clicking the selected pin does not start a move");
+  await closePanel(tab);
+  await tab.click("[data-testid=tool-undo]"); // undo the overlap move
   await tab.waitForTimeout(200);
 
   // Save failure keeps edits and offers Retry.
@@ -425,7 +397,7 @@ try {
   check((await waitSaved(tab)) === "failed", "a failed save shows Save failed");
   check(await tab.locator("[data-testid=retry-save]").isVisible(), "a Retry button is offered");
   check((await tab.locator("[data-testid=place-panel] input[name=hours]").inputValue()) === "Daily 06:00–18:00", "unsaved edits are kept after a failed save");
-  await tab.screenshot({ path: join(shots, "09-save-failed.png") });
+  await tab.screenshot({ path: join(shots, "07-save-failed.png") });
   await tab.evaluate(() => localStorage.removeItem("fake-fail"));
   await tab.click("[data-testid=retry-save]");
   check((await waitSaved(tab)) === "saved", "Retry saves the draft");
@@ -443,7 +415,7 @@ try {
   await tab.waitForSelector("[data-testid=conflict-dialog]", { timeout: 10000 });
   draft = await fakeDb(tab, "map/draft");
   check(draft.places[0].nameEn === "Changed by another editor", "a conflicting save does not overwrite the other editor's draft");
-  await tab.screenshot({ path: join(shots, "10-conflict.png") });
+  await tab.screenshot({ path: join(shots, "08-conflict.png") });
   await tab.getByRole("button", { name: "Replace theirs with mine" }).click();
   check((await waitSaved(tab)) === "saved", "after confirming, your version can replace theirs");
 
@@ -451,13 +423,13 @@ try {
   await tab.click("[data-testid=tool-preview]");
   await tab.waitForSelector("[data-testid=preview-banner]");
   check((await tab.locator("[data-testid=editor-toolbar]").count()) === 0, "Preview shows the visitor experience without editing tools");
-  await tab.screenshot({ path: join(shots, "11-preview.png") });
+  await tab.screenshot({ path: join(shots, "09-preview.png") });
   await tab.click("[data-testid=preview-back]");
   await tab.waitForSelector("[data-testid=editor-toolbar]");
   await tab.click("[data-testid=tool-publish]");
   await tab.waitForSelector("[data-testid=publish-dialog]");
   check((await tab.locator("[data-testid=publish-dialog] .publish-summary").innerText()).match(/moved|edited|new/), "publishing shows what will change");
-  await tab.screenshot({ path: join(shots, "12-publish.png") });
+  await tab.screenshot({ path: join(shots, "10-publish.png") });
   await tab.click("[data-testid=publish-confirm]");
   await tab.waitForSelector("[data-testid=publish-dialog]", { state: "detached", timeout: 15000 });
   const published = await fakeDb(tab, "map/published");
@@ -475,7 +447,7 @@ try {
   await tab.locator("[data-testid=place-panel] input[name=hours]").fill("Recovered hours");
   await tab.waitForTimeout(700);
   await tab.reload({ waitUntil: "networkidle" });
-  await tab.waitForSelector(".three-marker:not([hidden])");
+  await waitForMap(tab);
   await enterEditor(tab);
   check(await tab.locator("[data-testid=recovery-banner]").isVisible(), "unsaved edits are offered back after a refresh");
   await tab.click("[data-testid=recovery-restore]");
@@ -493,28 +465,17 @@ try {
     await tab.waitForTimeout(600);
     const toolbarHeight = (await tab.locator("[data-testid=editor-toolbar]").boundingBox()).height;
     check(toolbarHeight <= 110, "the editing toolbar stays compact on a phone", `${Math.round(toolbarHeight)} px`);
-    await tab.screenshot({ path: join(shots, "13-mobile-editor.png") });
-    let box = await markerBox(tab, "so-heng-tai");
-    await tab.touchscreen.tap(box.x + box.width / 2, box.y + 22);
-    await tab.waitForSelector("[data-testid=place-panel]", { timeout: 5000 });
+    await tab.screenshot({ path: join(shots, "11-mobile-editor.png") });
+    await selectPin(tab, "so-heng-tai", { touch: true });
     check(true, "tapping a pin on a phone opens the panel");
-    const before = await realLocation(tab);
-    await tab.screenshot({ path: join(shots, "14-mobile-panel.png") });
+    const before = await illustrationPosition(tab);
+    await tab.screenshot({ path: join(shots, "12-mobile-panel.png") });
     await tab.locator("[data-testid=panel-move-pin]").tap();
-    await tab.waitForSelector("[data-testid=placement-bar]");
-    box = await markerBox(tab, "so-heng-tai");
-    await tab.touchscreen.tap(box.x + box.width / 2 + 40, box.y + 70);
-    await tab.waitForTimeout(400);
-    check((await tab.locator("[data-testid=pending-coordinates]").count()) === 1, "tap the destination works on a phone");
-    box = await markerBox(tab, "so-heng-tai");
-    const angle = await compass(tab);
-    await dragPin(tab, { x: box.x + box.width / 2, y: box.y + 22 }, { x: box.x + box.width / 2 - 40, y: box.y + 50 }, { touch: true });
-    await tab.waitForTimeout(300);
-    check((await compass(tab)) === angle, "touch-dragging a pin does not rotate the camera");
-    await tab.screenshot({ path: join(shots, "15-mobile-placement.png") });
-    await tab.locator("[data-testid=placement-confirm]").tap();
+    await tab.waitForSelector("[data-testid=placement-banner]");
+    await tab.screenshot({ path: join(shots, "13-mobile-move.png") });
+    await tapIllustration(tab, 0.5, 0.75, { touch: true });
     await tab.waitForSelector("[data-testid=place-panel]");
-    check((await realLocation(tab)) !== before, "Confirm position works on a phone");
+    check((await illustrationPosition(tab)) !== before, "moving a pin by tapping works on a phone");
     await tab.locator("[data-testid=panel-save]").tap();
     check((await waitSaved(tab)) === "saved", "saving works on a phone");
     check(errors.length === 0, "no page errors on mobile", errors.join(" | "));
