@@ -1,0 +1,15 @@
+{
+  "name": "talat-noi-map",
+  "private": true,
+  "version": "2.0.0",
+  "description": "Talat Noi story map with an illustrated 3D map and a pin editor.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "test": "node tests/editor.e2e.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

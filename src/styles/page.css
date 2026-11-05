@@ -1,0 +1,41 @@
+/* Page-level rules for the single-file build (previously inlined by the read-only copy). */
+:root {
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+}
+body {
+  margin: 0;
+  padding: 0;
+  font: 14px -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #000;
+}
+img {
+  max-width: 100%;
+}
+[hidden]:not([hidden="until-found" i]) {
+  display: none !important;
+}
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  background: #fcfcf9;
+}
+.map-app {
+  height: 100%;
+}
+/* Links to routes of the original server deployment, and the Google street map,
+   are not available in this single-page build. Sandboxed artifact pages also block
+   plain download links. */
+.menu-links,
+.view-switch button:has(svg.lucide-map-pin),
+a[download] {
+  display: none;
+}

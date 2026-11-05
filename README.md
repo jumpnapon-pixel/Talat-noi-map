@@ -1,36 +1,56 @@
 # Talat-noi-map
 Codes and progress of Talat Noi
 
-An interactive story map of Talat Noi (ตลาดน้อย), Bangkok: 15 places across
-heritage, belief, art & craft, food & drink and community, shown on an
-illustrated 3D map, an illustrated map, the original map and a navigation view.
+An interactive story map of Talat Noi (ตลาดน้อย), Bangkok: places across heritage, belief,
+art & craft, food & drink and community, shown on an illustrated 3D map, two flat
+illustrated maps and a navigation map. Editors can add, select, move and update place pins
+directly on the 3D map.
 
-Snapshot of the Claude artifact
-<https://claude.ai/artifact/TkqKbPWn4bnvpNdqyRsojh> (version `1793847477-f87d`,
-copied 2026-11-05).
+- **How to edit the map (no coding):** [docs/EDITING-GUIDE.md](docs/EDITING-GUIDE.md)
+- **How it is built:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+
+The map started as a snapshot of the Claude artifact
+<https://claude.ai/artifact/TkqKbPWn4bnvpNdqyRsojh> (version `1793847477-f87d`).
+
+## Editing in short
+
+1. Open the map as an Editor or Owner and press **Edit map**.
+2. Tap a pin to open its panel, or press **Add pin** and tap the map.
+3. Drag the pin, or press **Move pin** and tap the destination. Fine-tune with the arrows or
+   the top-down view, then **Confirm position**.
+4. Edit names, category, description, visitor information and the photo in the panel.
+5. **Save draft**, check with **Preview**, then **Publish** for visitors.
 
 ## Run locally
 
-The page fetches its data with relative URLs, so serve the folder over HTTP
-rather than opening `index.html` as a file:
-
 ```sh
-python3 -m http.server 8000
-# open http://localhost:8000/
+npm install        # once: installs the build tool (esbuild)
+npm run build      # writes index.html from src/
+npm run serve      # http://localhost:8000/
 ```
 
-The folder also works as-is on GitHub Pages.
+On `localhost` the editor is available and saves to your browser only. Published as a
+claude.ai artifact, it saves to the artifact's shared database and asset store. Only the
+artifact's Editors and Owner can edit there.
+
+## Test
+
+```sh
+npm run build
+npm test           # Playwright end-to-end checks, desktop and mobile; screenshots in test-results/
+```
 
 ## Layout
 
 | Path | What it is |
 | --- | --- |
-| `index.html` | The whole app as one compiled bundle (React, Three.js, Tailwind); no separate source |
+| `index.html` | The built map (generated: edit `src/` and run `npm run build`) |
+| `src/` | Source: recovered map components, the app and editor, styles, the built-in edition |
 | `assets/*.webp` | Landmark photos and map illustrations |
 | `assets/fieldwork/*.jpg` | Field photos taken 2026-11-04 |
 | `data/talat-noi-osm.json` | OpenStreetMap buildings and features for the area |
 | `data/talat-noi-street-network.json` | Street network used for the map and directions |
+| `docs/` | Editing guide and architecture notes |
+| `tests/` | End-to-end tests |
 
 Map data © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright).
-Landmarks and pins people add in the app are saved only in that browser's
-`localStorage`, not in this repository.
