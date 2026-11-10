@@ -18,6 +18,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const page = process.argv.slice(2).find((arg) => !arg.startsWith("--")) ?? "index.html";
 const only = process.argv.find((arg) => arg.startsWith("--only="))?.slice(7).split(",") ?? ["visitor", "desktop", "mobile"];
 const shots = join(root, "test-results");
+const seed = JSON.parse(readFileSync(join(root, "src/data/published-seed.json"), "utf8"));
 mkdirSync(shots, { recursive: true });
 
 // ---- static server -------------------------------------------------------------------------
@@ -197,6 +198,8 @@ try {
     const views = (await tab.locator(".filter-bar .view-switch button").allInnerTexts()).map((text) => text.trim());
     check(!views.some((text) => /3D/.test(text)) && (await tab.locator("canvas").count()) === 0, "there is no 3D view", views.join(", "));
     check((await tab.locator("[data-testid=edit-map]").count()) === 0, "viewers do not get an Edit map button");
+    check((await tab.locator(".map-marker[data-place-id]").count()) === seed.places.filter((place) => place.approved).length, "every published place has a pin");
+    check(await marker(tab, "32bar-x-chocolate").isVisible(), "32Bar X has a pin on the map");
     const draftVisible = await tab.evaluate(async () => (await (await window.claude.use("db")).doc("map/draft").get()).exists);
     check(!draftVisible, "the draft is not readable by viewers");
     const denied = await tab.evaluate(async () => {
@@ -310,9 +313,9 @@ try {
   check((await waitSaved(tab)) === "saved", "Save draft reaches the Saved state");
   let draft = await fakeDb(tab, "map/draft");
   const savedRong = draft.places.find((place) => place.id === "rong-kueak");
-  check(draft.revision === 10, "draft revision increases from the published edition", String(draft.revision));
+  check(draft.revision === seed.revision + 1, "draft revision increases from the published edition", String(draft.revision));
   check(savedRong.nameEn === "Rong Kueak Shrine (Shoe Shrine)" && savedRong.photoCaption === "Shrine gate at dusk" && /^\/_blob\//.test(savedRong.photoUrl), "draft keeps text, caption and the durable photo URL");
-  check(draft.places.length === 15 && new Set(draft.places.map((place) => place.id)).size === 15, "existing place IDs are kept without duplicates");
+  check(draft.places.length === seed.places.length && new Set(draft.places.map((place) => place.id)).size === seed.places.length, "existing place IDs are kept without duplicates");
   check((await fakeDb(tab, "map/published")) === null, "saving a draft does not change the visitor map");
 
   // Refresh: the pin and photo come back from the saved draft.

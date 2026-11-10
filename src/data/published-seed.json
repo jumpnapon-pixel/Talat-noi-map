@@ -449,6 +449,38 @@
       "size": 60,
       "icon": "pin",
       "rotation": 0
+    },
+    {
+      "id": "32bar-x-chocolate",
+      "nameEn": "32Bar X Specialty Chocolate",
+      "nameTh": "32 บาร์ เอ็กซ์ สเปเชียลตี้ช็อกโกแลต",
+      "category": "Food & drink",
+      "photoUrl": "assets/32bar-x-chocolate.webp",
+      "photoAlt": "Wood-panelled shopfront of 32Bar X with a gold logo, a festive garland and tall glass doors looking into the glowing chocolate shop.",
+      "photoCredit": "Photo by Jump",
+      "photoSource": "assets/32bar-x-chocolate.webp",
+      "photoCaption": "32Bar X: award-winning chocolate, made right here in Talat Noi",
+      "storyEn": "Push open the tall wooden doors of 32Bar X and step into a chocolate lover's fantasy. This award-winning chocolatier makes its chocolate right here in Talat Noi, and every bite has a taste you won't find anywhere else: rich, surprising flavours you'll be thinking about long after you leave. The shop is a destination in itself. Warm wood, glowing counters piled high with treats and a jewel-bright chandelier give it the magical, anything-can-happen feel of a Willy Wonka sweet shop, right down to its very own chocolate vending machine. Best of all is the welcome: the team behind the counter is warm, friendly and full of personality, and happy to help you find your new favourite bar.",
+      "storyTh": "ผลักประตูไม้บานสูงของ 32 บาร์ เอ็กซ์ แล้วก้าวเข้าสู่โลกในฝันของคนรักช็อกโกแลต ร้านช็อกโกแลตที่คว้ารางวัลมาแล้วแห่งนี้ผลิตช็อกโกแลตเองที่ตลาดน้อย ทุกคำมีรสชาติเฉพาะตัวที่หาไม่ได้จากที่อื่น เข้มข้น น่าประหลาดใจ และชวนให้คิดถึงไปอีกนาน ตัวร้านเองก็เป็นจุดหมายที่ต้องมาเยือน ทั้งงานไม้โทนอบอุ่น ตู้โชว์เปล่งแสงที่มีขนมหวานเรียงราย และโคมระย้าสีสดใส ให้บรรยากาศมหัศจรรย์ราวกับหลุดเข้าไปในร้านขนมของวิลลี่ วองก้า แถมยังมีตู้กดช็อกโกแลตอัตโนมัติให้ได้ลองอีกด้วย ที่ประทับใจที่สุดคือการต้อนรับ พนักงานอัธยาศัยดี เป็นกันเอง มีเสน่ห์ และยินดีช่วยคุณค้นหาช็อกโกแลตชิ้นโปรดชิ้นใหม่",
+      "tipEn": "Open daily, 9:30 AM to 7:00 PM. Try the chocolate vending machine, ask the team which flavour they love most, and take a bar home: it makes the perfect Talat Noi souvenir.",
+      "tipTh": "เปิดทุกวัน 09:30–19:00 น. ลองกดช็อกโกแลตจากตู้อัตโนมัติ ถามพนักงานว่าชอบรสไหนที่สุด แล้วซื้อติดมือกลับบ้านสักแท่ง เป็นของฝากจากตลาดน้อยที่ลงตัวที่สุด",
+      "location": "In the heart of Talat Noi's historic riverside quarter, a short stroll from So Heng Tai Mansion · PGM7+F53, Bangkok",
+      "lat": 13.733639,
+      "lng": 100.5129327,
+      "mapsUrl": "https://www.google.com/maps/search/?api=1&query=13.733639%2C100.5129327",
+      "price": "",
+      "hours": "Daily 9:30 AM – 7:00 PM",
+      "lastChecked": "",
+      "verification": "pending",
+      "verificationNotes": "Opening hours are taken from the shop window. Check the shop's own pages for holiday hours before a special trip.",
+      "source": "Map team site visit: photo, coordinates and opening hours. Award and product details from the map team, not yet independently confirmed.",
+      "approved": true,
+      "x": 45,
+      "y": 49,
+      "size": 60,
+      "icon": "pin",
+      "rotation": 0,
+      "illustrationEstimated": true
     }
   ],
   "structures": [
@@ -683,8 +715,8 @@
       "hidden": false
     }
   ],
-  "revision": 9,
-  "publishedRevision": 9,
-  "updatedAt": "2026-11-05T02:37:18.596Z",
-  "publishedAt": "2026-11-05T02:37:18.596Z"
+  "revision": 10,
+  "publishedRevision": 10,
+  "updatedAt": "2026-11-10T03:50:35.000Z",
+  "publishedAt": "2026-11-10T03:50:35.000Z"
 }
