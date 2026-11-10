@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "build:standalone": "node scripts/build.mjs --standalone --out=dist/talat-noi-map.html",
     "serve": "node scripts/serve.mjs",
     "test": "node tests/editor.e2e.mjs"
   },

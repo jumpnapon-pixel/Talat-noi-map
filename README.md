@@ -34,6 +34,15 @@ On `localhost` the editor is available and saves to your browser only. Published
 claude.ai artifact, it saves to the artifact's shared database and asset store. Only the
 artifact's Editors and Owner can edit there.
 
+## Share as one file
+
+```sh
+npm run build:standalone   # writes dist/talat-noi-map.html (about 15 MB, works offline)
+```
+
+The file contains the visitor map with all photos and map data inside. Send it to anyone or
+open it from disk. It is read-only.
+
 ## Test
 
 ```sh

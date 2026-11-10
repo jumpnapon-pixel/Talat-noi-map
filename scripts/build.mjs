@@ -10,7 +10,11 @@
 //   node scripts/build.mjs --artifact --out=<file>
 //                                     page body for publishing as a claude.ai artifact (the
 //                                     platform adds the document skeleton around it)
-import { readFileSync, writeFileSync } from "node:fs";
+//   node scripts/build.mjs --standalone --out=<file>
+//                                     one self-contained file to share: every image and data
+//                                     file it uses is embedded, so it opens from disk or any
+//                                     host (read-only visitor map; see embedFiles below)
+import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as esbuild from "esbuild";
@@ -72,11 +76,43 @@ async function buildStyles() {
   return code;
 }
 
-const [script, styles] = await Promise.all([buildScript(), buildStyles()]);
+// Standalone build: the page refers to its images and data by relative paths
+// ("assets/…", "data/…?v=…"). Each file is embedded once as base64. Quoted paths in the
+// script become __tnFile("…") calls, which turn the embedded bytes into a blob: URL on first
+// use (fetch, <img> and links all accept those). The one CSS url() becomes a data: URL.
+const FILE_PATH = /(?:assets|data)\/[A-Za-z0-9_.\/-]+\.(?:webp|jpg|jpeg|png|json)/;
+const MIME = { webp: "image/webp", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", json: "application/json" };
+const mimeOf = (path) => MIME[path.split(".").pop().toLowerCase()];
+
+function embedFiles(script, styles) {
+  const used = new Set();
+  const styled = styles.replace(new RegExp(`url\\((${FILE_PATH.source})\\)`, "g"), (_, path) => {
+    const data = readFileSync(join(root, path)).toString("base64");
+    return `url(data:${mimeOf(path)};base64,${data})`;
+  });
+  const scripted = script.replace(new RegExp(`"(${FILE_PATH.source})(?:\\?[^"]*)?"`, "g"), (_, path) => {
+    used.add(path);
+    return `__tnFile(${JSON.stringify(path)})`;
+  });
+  const files = Object.fromEntries(
+    [...used].sort().map((path) => [path, [mimeOf(path), readFileSync(join(root, path)).toString("base64")]]),
+  );
+  const loader = `(()=>{const f=${JSON.stringify(files)},u={};window.__tnFile=p=>{if(u[p])return u[p];const e=f[p];if(!e)return p;const b=atob(e[1]),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return u[p]=URL.createObjectURL(new Blob([a],{type:e[0]}))}})();`;
+  return { script: `${loader}\n${scripted}`, styles: styled, count: used.size };
+}
+
+let [script, styles] = await Promise.all([buildScript(), buildStyles()]);
+const standalone = process.argv.includes("--standalone");
+if (standalone) {
+  const embedded = embedFiles(script, styles);
+  ({ script, styles } = embedded);
+  console.log(`Embedded ${embedded.count} files`);
+}
 const licenses = read("src/recovered/LICENSES.txt");
 const artifact = process.argv.includes("--artifact");
 const html = read(artifact ? "src/artifact.template.html" : "src/index.template.html")
   .replace("/*__STYLES__*/", () => styles.replaceAll("</style", "<\\/style"))
   .replace("/*__SCRIPT__*/", () => `${script.replaceAll("</script", "<\\/script")}\n${licenses}`);
+mkdirSync(dirname(outPath(out)), { recursive: true });
 writeFileSync(outPath(out), html);
 console.log(`Wrote ${out} (${(html.length / 1024).toFixed(0)} KB${dev ? ", dev" : ""})`);

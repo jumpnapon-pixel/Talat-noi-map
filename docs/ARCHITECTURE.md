@@ -95,6 +95,8 @@ Each change is marked with a "Talat Noi editor" comment.
   uses event timestamps.
 - Place card: shows the photo caption.
 - Photo queue: the "Place on 3D map" button now reads "Place on illustration".
+- Visitor place card and navigation panel: wording that referred to the 3D map now refers to
+  the map (English and Thai).
 
 The original app shell (minified `yE`) and its `fetch` shim for `/api/*` were replaced by
 `src/app/App.jsx` and `src/app/store.js`.
@@ -112,3 +114,11 @@ illustration.
   would make the page smaller.
 - Saved drafts and published editions still carry a `structures` list. It is validated and
   saved unchanged so older data keeps loading, but nothing shows it.
+
+## Sharing the map as one file
+
+`npm run build:standalone` writes `dist/talat-noi-map.html`: the visitor map with every image
+and data file it uses embedded (about 15 MB). It opens straight from disk or any web host,
+makes no network requests and is read-only (no editor, since it has no shared database). It
+shows the edition built into the page (`src/data/published-seed.json`), so places published
+later from the claude.ai map are only included after that file is updated.
