@@ -34,6 +34,8 @@ const GUIDE_TEXT = {
   placesTab: ["Places", "สถานที่"],
   chapter: ["Chapter", "ช่วงที่"],
   alsoHere: ["Also along the way", "แวะดูเพิ่มระหว่างทาง"],
+  nextStop: ["Next stop", "จุดต่อไป"],
+  alternatives: ["Nearby alternatives", "ทางเลือกใกล้เคียง"],
   walkNote: [
     "Directions appear only for stops whose entrance has been confirmed. Other stops are ready to read.",
     "เส้นทางจะแสดงเฉพาะจุดที่ยืนยันทางเข้าแล้ว จุดอื่นเปิดอ่านเรื่องราวได้เลย",
@@ -124,3 +126,131 @@ const WALK = {
     "มีเวลามากขึ้น? เดินครบทั้งสามช่วง แวะพักกินระหว่างทางตามสะดวก จะอ่านเรื่องราวตามลำดับหรือเลือกจุดที่อยู่ใกล้ก็ได้",
   ],
 };
+
+// ----- Opening hours (Bangkok time) ----------------------------------------------------------
+// Only "published" and "listed" schedules can say Open/Closed by schedule, and only while the
+// review is recent. Everything else shows its visit label; no status is ever a live check.
+const DAY_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+const DAY_NAMES = {
+  en: { mon: "Mon", tue: "Tue", wed: "Wed", thu: "Thu", fri: "Fri", sat: "Sat", sun: "Sun" },
+  th: { mon: "จ.", tue: "อ.", wed: "พ.", thu: "พฤ.", fri: "ศ.", sat: "ส.", sun: "อา." },
+};
+const HOURS_STALE_DAYS = 183;
+const HOURS_TEXT = {
+  today: ["Today’s hours", "วันนี้เปิดกี่โมง"],
+  open: ["Open by schedule", "เปิดตามเวลาที่แจ้ง"],
+  closed: ["Closed by schedule", "ปิดตามเวลาที่แจ้ง"],
+  check: ["Check before going", "ควรเช็กก่อนไป"],
+  unknown: ["Hours not confirmed", "ยังไม่ยืนยันเวลาเปิดปิด"],
+  outdoor: ["Outdoor stop", "จุดชมกลางแจ้ง"],
+  area: ["Area guide", "เรื่องราวของย่าน"],
+  closedDay: ["Closed", "ปิด"],
+  notListed: ["Not listed", "ไม่ระบุ"],
+  nextDay: ["next day", "วันถัดไป"],
+  week: ["This week (Bangkok time)", "ตลอดสัปดาห์ (เวลากรุงเทพฯ)"],
+  exceptions: ["Special dates", "วันพิเศษ"],
+  otherListings: ["Other published listings (indicative)", "เวลาตามแหล่งอื่น (ใช้อ้างอิง)"],
+  reviewed: ["Listings reviewed", "ตรวจสอบรายการเมื่อ"],
+  stale: ["These hours were reviewed a while ago. Check before going.", "ข้อมูลเวลานี้ตรวจสอบมานานแล้ว ควรเช็กก่อนไป"],
+  notToday: ["No hours listed for today. Check before going.", "ไม่มีเวลาที่ระบุสำหรับวันนี้ ควรเช็กก่อนไป"],
+  scheduleNote: ["Based on the published schedule, not a live check.", "อ้างอิงเวลาที่เผยแพร่ ไม่ใช่การตรวจสอบสด"],
+  hoursSources: ["Hours sources", "แหล่งข้อมูลเวลาเปิดปิด"],
+  openNow: ["Open by schedule now", "เปิดตามเวลาที่แจ้งตอนนี้"],
+};
+const tHours = (lang, key) => HOURS_TEXT[key][lang === "th" ? 1 : 0];
+
+const toMinutes = (text) => {
+  const [h, m] = text.split(":").map(Number);
+  return h * 60 + m;
+};
+// "" -> unknown, "closed" -> closed, "09:00-18:00, 19:00-01:00" -> ranges (overnight past 1440).
+function parseHours(text) {
+  const value = (text || "").trim().toLowerCase();
+  if (!value) return { kind: "unknown" };
+  if (value === "closed") return { kind: "closed" };
+  const ranges = value.split(",").map((part) => {
+    const [open, close] = part.split(/[-–]/).map((piece) => toMinutes(piece.trim()));
+    return { open, close: close <= open ? close + 1440 : close };
+  });
+  return { kind: "open", ranges };
+}
+
+// The calendar date, weekday and minutes in Bangkok, whatever the device's time zone.
+function bangkokClock(now = new Date()) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Bangkok",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      weekday: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(now)
+      .map((part) => [part.type, part.value]),
+  );
+  return {
+    date: `${parts.year}-${parts.month}-${parts.day}`,
+    day: parts.weekday.slice(0, 3).toLowerCase(),
+    minutes: Number(parts.hour) * 60 + Number(parts.minute),
+  };
+}
+function shiftDate(iso, days) {
+  const date = new Date(`${iso}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+const dayKeyOf = (iso) => DAY_KEYS[(new Date(`${iso}T00:00:00Z`).getUTCDay() + 6) % 7];
+
+function hoursOn(place, iso) {
+  const exception = (place.hoursExceptions ?? []).find((item) => item.date === iso);
+  const text = exception ? exception.hours : (place.weeklyHours ?? {})[dayKeyOf(iso)] ?? "";
+  return { ...parseHours(text), exception };
+}
+
+function hasSchedule(place) {
+  return DAY_KEYS.some((day) => (place.weeklyHours ?? {})[day]);
+}
+
+// { kind: "open" | "closed" | "check" | "unknown" | "outdoor" | "area", today, reason }
+function scheduleState(place, now = new Date()) {
+  const status = place.hoursStatus || (place.kind === "area-guide" ? "area" : "");
+  const clock = bangkokClock(now);
+  const today = hoursOn(place, clock.date);
+  if (status === "area" || status === "outdoor" || status === "unknown") return { kind: status, today, clock };
+  if (status === "check" || !status) return { kind: status ? "check" : "unknown", today, clock };
+  // published or listed
+  if (!hasSchedule(place)) return { kind: "check", today, clock, reason: "no-schedule" };
+  const reviewed = place.hoursReviewedOn ? Date.parse(`${place.hoursReviewedOn}T00:00:00Z`) : NaN;
+  if (!Number.isFinite(reviewed) || now.getTime() - reviewed > HOURS_STALE_DAYS * 864e5)
+    return { kind: "check", today, clock, reason: "stale" };
+  const yesterday = hoursOn(place, shiftDate(clock.date, -1));
+  const inToday = today.kind === "open" && today.ranges.some((r) => clock.minutes >= r.open && clock.minutes < r.close);
+  const spill =
+    yesterday.kind === "open" && yesterday.ranges.some((r) => r.close > 1440 && clock.minutes < r.close - 1440);
+  if (inToday || spill) return { kind: "open", today, clock };
+  if (today.kind === "unknown") return { kind: "check", today, clock, reason: "not-today" };
+  return { kind: "closed", today, clock };
+}
+
+const pad = (minutes) => {
+  const m = ((minutes % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+};
+function formatDayHours(parsed, lang) {
+  if (parsed.kind === "closed") return tHours(lang, "closedDay");
+  if (parsed.kind === "unknown") return tHours(lang, "notListed");
+  return parsed.ranges
+    .map((r) => `${pad(r.open)}–${pad(r.close)}${r.close > 1440 ? ` (${tHours(lang, "nextDay")})` : ""}`)
+    .join(", ");
+}
+
+// The visit label shown when a place has no Open/Closed status.
+function hoursLabel(place, state, lang) {
+  const own = lang === "th" ? place.hoursLabelTh || place.hoursLabelEn : place.hoursLabelEn;
+  if (state.kind === "open" || state.kind === "closed") return tHours(lang, state.kind);
+  if (state.reason === "stale" || state.reason === "not-today") return tHours(lang, "check");
+  return own || tHours(lang, state.kind === "check" ? "check" : state.kind);
+}

@@ -11,6 +11,8 @@
     "test": "node tests/editor.e2e.mjs"
   },
   "devDependencies": {
-    "esbuild": "0.25.12"
+    "esbuild": "0.25.12",
+    "jsqr": "^1.4.0",
+    "pngjs": "^7.0.0"
   }
 }

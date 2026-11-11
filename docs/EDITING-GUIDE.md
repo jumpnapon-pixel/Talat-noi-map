@@ -82,6 +82,35 @@ actual accessible entrance or a public viewing point on site, open **Position**,
 location if needed, then turn on **Entrance confirmed: offer directions** and fill in
 **Confirmed on site on** and **How it was confirmed**. Area guides never offer directions.
 
+## Opening hours
+
+Visitors see **Today’s hours** under the place name. Tapping it shows the week, notes, other
+published listings, service or office times and the hours sources. All times are Bangkok time.
+
+In the panel, open **Opening hours**:
+
+- **Hours status** decides what visitors see:
+  - **Published schedule** or **Listed hours** with a weekly schedule: the card says **Open by
+    schedule** or **Closed by schedule**. It never claims a live check.
+  - **Check before going**, **Hours unknown**, **Outdoor stop**, **Area guide**: the card shows
+    your visit label (for example “Check hours, especially Sunday”) and no Open/Closed badge.
+- **Weekly schedule**: `09:00-18:00`, several ranges with commas (`07:00-11:00, 16:30-18:00`),
+  `closed`, or empty for “not listed”. A close earlier than the open runs past midnight
+  (`12:30-01:00`).
+- **Special dates** replace the weekly hours on that date (holidays, one-off closures).
+- **Other published listings** show disagreements as indicative. **Service or office times**
+  (Mass, shrine office) are kept apart and never decide Open/Closed.
+- **Listings reviewed on**: schedules older than six months drop back to “Check before going”.
+- When a venue confirms its hours: replace the weekly schedule, set the status, update the
+  review date and note in **Hours notes for editors** which source changed.
+
+## Share map and QR
+
+**Share map** (top right) offers the phone’s share sheet, **Copy link**, a QR code and
+**Download QR** (a printable PNG). All of them use the one visitor link set in
+`src/app/share.jsx` (`SHARE_URL`). When the launch link is approved, change it there and
+rebuild: the button, copy link and QR all follow.
+
 ## Save, undo and recover
 
 - The toolbar always shows the state: **Unsaved changes**, **Saving…**, **Saved** or

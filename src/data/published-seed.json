@@ -65,7 +65,56 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: 987 Soi Wanit 2, Talat Noi. P06 shows the signed street gateway; use that gateway as the field reference and check public access.\n\nEditorial check: Use 1786 for the land grant and 1787 for completion of the first church; do not confuse either with 1897. No published visitor schedule or gate access was confirmed for this prompt.\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: 987 Soi Wanit 2, Talat Noi. P06 shows the signed street gateway; use that gateway as the field reference and check public access.\n\nEditorial check: Use 1786 for the land grant and 1787 for completion of the first church; do not confuse either with 1897. No published visitor schedule or gate access was confirmed for this prompt.\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "check",
+      "hoursScope": "visitor",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Check before going",
+      "hoursLabelTh": "ควรเช็กก่อนไป",
+      "hoursNoteEn": "Interior access varies. Check with the parish before visiting.",
+      "hoursNoteTh": "เวลาเข้าชมภายในอาจเปลี่ยนแปลง โปรดสอบถามทางวัดก่อนเดินทาง",
+      "hoursReports": [
+        {
+          "source": "Phuket 101: The Holy Rosary Church visitor guide",
+          "url": "https://www.phuket101.net/bangkok/the-holy-rosary-church/",
+          "text": "Mon–Sat 16:30–18:00; Sun 07:00–11:00 and 16:30–18:00",
+          "textTh": "จ.–ส. 16:30–18:00; อา. 07:00–11:00 และ 16:30–18:00"
+        },
+        {
+          "source": "Local Thailand: Holy Rosary Church listing",
+          "url": "https://localthailand.net/thurakit/wat-mae-phra-lukprakham-kanwa-samphanthawong",
+          "text": "Mon–Sat 16:30–18:30; Sun 07:00–11:00 and 16:30–18:30 (later evening close)",
+          "textTh": "จ.–ส. 16:30–18:30; อา. 07:00–11:00 และ 16:30–18:30 (ปิดช่วงเย็นช้ากว่า)"
+        }
+      ],
+      "otherTimes": [
+        {
+          "labelEn": "Mass (service times, not visiting hours)",
+          "labelTh": "เวลามิสซา (เวลาพิธี ไม่ใช่เวลาเข้าชม)",
+          "textEn": "Mon–Sat 19:30 · Sun 08:00, 10:00 and 19:30 (Catholic directory)",
+          "textTh": "จ.–ส. 19:30 · อา. 08:00, 10:00 และ 19:30 (ทำเนียบคาทอลิก)"
+        }
+      ],
+      "hoursSources": [
+        {
+          "id": "H01",
+          "title": "Catholic directory (catholic.or.th): Holy Rosary Church, Mass times",
+          "url": "https://www.catholic.or.th/main/index.php?Itemid=341&catid=101&id=553%3A%E0%B8%A7%E0%B8%B1%E0%B8%94%E0%B9%81%E0%B8%A1%E0%B9%88%E0%B8%9E%E0%B8%A3%E0%B8%B0%E0%B8%A5%E0%B8%B9%E0%B8%81%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%84%E0%B8%B3-%E0%B8%81%E0%B8%B2%E0%B8%A5%E0%B8%AB%E0%B8%A7%E0%B9%88%E0%B8%B2%E0%B8%A3%E0%B9%8C&option=com_content&view=article"
+        },
+        {
+          "id": "H02",
+          "title": "Local Thailand: Holy Rosary Church listing",
+          "url": "https://localthailand.net/thurakit/wat-mae-phra-lukprakham-kanwa-samphanthawong"
+        },
+        {
+          "id": "H03",
+          "title": "Phuket 101: The Holy Rosary Church visitor guide",
+          "url": "https://www.phuket101.net/bangkok/the-holy-rosary-church/"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Visiting windows differ in the evening close (18:00 Phuket 101 vs 18:30 Local Thailand). Mass times are services, kept separate from visiting status. Confirm interior access with the parish."
     },
     {
       "approved": true,
@@ -135,12 +184,31 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: Area around Soi Wanit 2 and Charoen Krung Soi 22, in Talat Noi, Samphanthawong. This card introduces the neighborhood.\n\nEditorial check: The museum is a named contextual reference, not a sixteenth map record. The whole quarter has no single entrance, admission fee or opening time.\n\nField check before enabling directions: Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: Area around Soi Wanit 2 and Charoen Krung Soi 22, in Talat Noi, Samphanthawong. This card introduces the neighborhood.\n\nEditorial check: The museum is a named contextual reference, not a sixteenth map record. The whole quarter has no single entrance, admission fee or opening time.\n\nField check before enabling directions: Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "area",
+      "hoursScope": "",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Area guide · no set hours",
+      "hoursLabelTh": "เรื่องราวของย่าน · ไม่มีเวลาเปิดปิดรวม",
+      "hoursNoteEn": "Best explored in daylight. Each shop and shrine keeps its own hours; check their cards.",
+      "hoursNoteTh": "เดินชมช่วงกลางวันดีที่สุด ร้านค้าและศาลเจ้าแต่ละแห่งมีเวลาของตัวเอง ดูได้ในการ์ดของแต่ละจุด",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H04",
+          "title": "Tourism Authority of Thailand: ตลาดน้อย",
+          "url": "https://thai.tourismthailand.org/Attraction/%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Area card: no single venue schedule applies."
     },
     {
       "approved": true,
       "category": "Heritage",
-      "hours": "",
+      "hours": "Mon closed; Tue 09:00–18:00; Wed 09:00–18:00; Thu 09:00–18:00; Fri 09:00–18:00; Sat 09:00–18:00; Sun 09:00–18:00",
       "icon": "pin",
       "id": "so-heng-tai",
       "illustrationEstimated": false,
@@ -199,7 +267,51 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: No. 282, Soi Duang Tawan, off Soi Wanit 2, Talat Noi.\n\nEditorial check: Sources give different estimated construction periods. Avoid a single building year, a precise age, or a “Bangkok’s oldest” superlative. Do not advertise diving classes, a café service, an entry fee, or daily access as current facts without an owner check.\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: No. 282, Soi Duang Tawan, off Soi Wanit 2, Talat Noi.\n\nEditorial check: Sources give different estimated construction periods. Avoid a single building year, a precise age, or a “Bangkok’s oldest” superlative. Do not advertise diving classes, a café service, an entry fee, or daily access as current facts without an owner check.\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "listed",
+      "hoursScope": "visitor",
+      "weeklyHours": {
+        "mon": "closed",
+        "tue": "09:00-18:00",
+        "wed": "09:00-18:00",
+        "thu": "09:00-18:00",
+        "fri": "09:00-18:00",
+        "sat": "09:00-18:00",
+        "sun": "09:00-18:00"
+      },
+      "hoursExceptions": [],
+      "hoursLabelEn": "Listed hours",
+      "hoursLabelTh": "เวลาตามที่ประกาศ",
+      "hoursNoteEn": "Check the gate before entering. This is a private home: visitor access follows the family’s rules. Confirm special dates at the gate.",
+      "hoursNoteTh": "ดูป้ายที่ประตูก่อนเข้า บ้านหลังนี้เป็นบ้านส่วนตัว การเข้าชมเป็นไปตามกติกาของครอบครัว วันพิเศษโปรดสอบถามที่ประตู",
+      "hoursReports": [
+        {
+          "source": "iDiscover: The So Heng Tai Mansion",
+          "url": "https://i-discoverasia.com/walks/talad-noi/locations/the-so-heng-tai-mansion/",
+          "text": "Daily 10:00–18:00 (a different listing)",
+          "textTh": "ทุกวัน 10:00–18:00 (อีกแหล่งหนึ่ง)"
+        }
+      ],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H05",
+          "title": "Tourism Authority of Thailand: 1 day in Talat Noi",
+          "url": "https://www.tourismthailand.org/Articles/1-day-in-talat-noi"
+        },
+        {
+          "id": "H06",
+          "title": "Local Thailand: So Heng Tai, 282 Wanit 2",
+          "url": "https://localthailand.net/thurakit/ban-soohengthai-samphanthawong"
+        },
+        {
+          "id": "H07",
+          "title": "iDiscover: The So Heng Tai Mansion",
+          "url": "https://i-discoverasia.com/walks/talad-noi/locations/the-so-heng-tai-mansion/"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "TAT and the matched 282 Wanit 2 directory agree on Tue–Sun 09:00–18:00, Mon closed; iDiscover says daily 10:00–18:00. TAT Maps link for cross-checking: https://maps.app.goo.gl/DCu5h3ktirccR7rU9"
     },
     {
       "approved": true,
@@ -269,7 +381,60 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: Trok San Chao Rong Kueak, off Soi Wanit 2, beside the Chao Phraya.\n\nEditorial check: Use the Thai tourism directory and Treasury museum for the Hakka attribution. The English TAT itinerary calls the merchants Hokkien; the Thai TAT version agrees with the museum. Published Gregorian conversions for the plaque differ, so use “late nineteenth century” and avoid calling the inscription date the opening date. The name’s association with footwear is a proposed explanation, not a settled origin. [S11] [S12] [S13]\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: Trok San Chao Rong Kueak, off Soi Wanit 2, beside the Chao Phraya.\n\nEditorial check: Use the Thai tourism directory and Treasury museum for the Hakka attribution. The English TAT itinerary calls the merchants Hokkien; the Thai TAT version agrees with the museum. Published Gregorian conversions for the plaque differ, so use “late nineteenth century” and avoid calling the inscription date the opening date. The name’s association with footwear is a proposed explanation, not a settled origin. [S11] [S12] [S13]\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "check",
+      "hoursScope": "worship",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Check before going",
+      "hoursLabelTh": "ควรเช็กเวลาก่อนไป",
+      "hoursNoteEn": "Published hours differ; check the shrine’s entrance sign. Daytime is a better plan.",
+      "hoursNoteTh": "เวลาที่เผยแพร่ไม่ตรงกัน โปรดดูป้ายหน้าศาลเจ้า แนะนำให้ไปช่วงกลางวัน",
+      "hoursReports": [
+        {
+          "source": "Tourism Authority of Thailand: 1 วัน ย่านตลาดน้อย",
+          "url": "https://thai.tourismthailand.org/Articles/1-%E0%B8%A7%E0%B8%B1%E0%B8%99-%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%99%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2",
+          "text": "Daily 07:00–17:00",
+          "textTh": "ทุกวัน 07:00–17:00"
+        },
+        {
+          "source": "Tourism Authority of Thailand, Japan office: Rong Kuek Shrine",
+          "url": "https://www.thailandtravel.or.jp/rong-kuek-shrine/",
+          "text": "08:00–20:00",
+          "textTh": "08:00–20:00"
+        },
+        {
+          "source": "Thairath: Rong Kueak Shrine",
+          "url": "https://www.thairath.co.th/lifestyle/life/2914402",
+          "text": "06:00–18:00 (also MThai)",
+          "textTh": "06:00–18:00 (MThai ระบุเช่นกัน)"
+        }
+      ],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H08",
+          "title": "Tourism Authority of Thailand: 1 วัน ย่านตลาดน้อย",
+          "url": "https://thai.tourismthailand.org/Articles/1-%E0%B8%A7%E0%B8%B1%E0%B8%99-%E0%B8%A2%E0%B9%88%E0%B8%B2%E0%B8%99%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2"
+        },
+        {
+          "id": "H09",
+          "title": "Tourism Authority of Thailand, Japan office: Rong Kuek Shrine",
+          "url": "https://www.thailandtravel.or.jp/rong-kuek-shrine/"
+        },
+        {
+          "id": "H10",
+          "title": "Thairath: Rong Kueak Shrine",
+          "url": "https://www.thairath.co.th/lifestyle/life/2914402"
+        },
+        {
+          "id": "H11",
+          "title": "MThai Travel: Rong Kueak Shrine",
+          "url": "https://mthai.com/travel/bangkok/419755.html"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Four sources, three different schedules (07–17 TAT TH, 08–20 TAT JP, 06–18 Thairath and MThai for the 1192 shrine). TAT shrine Maps link: https://maps.app.goo.gl/zXNQDY92MSWGd6z26"
     },
     {
       "approved": true,
@@ -344,12 +509,36 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: Public lanes around Trok San Chao Rong Kueak and Soi Duang Tawan, linked to the Wanit 2 area. Treat this as an area guide.\n\nEditorial check: Do not attach artists from the 2018 project, the 2016 festival or CEA projects to an individual mural without a match. Workshops are places of work; no invitation to enter or promised demonstrations.\n\nField check before enabling directions: Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: Public lanes around Trok San Chao Rong Kueak and Soi Duang Tawan, linked to the Wanit 2 area. Treat this as an area guide.\n\nEditorial check: Do not attach artists from the 2018 project, the 2016 festival or CEA projects to an individual mural without a match. Workshops are places of work; no invitation to enter or promised demonstrations.\n\nField check before enabling directions: Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "outdoor",
+      "hoursScope": "",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Outdoor walk · best in daylight",
+      "hoursLabelTh": "เดินชมกลางแจ้ง · แนะนำช่วงกลางวัน",
+      "hoursNoteEn": "These are public lanes. Workshops and private displays are places of work with their own hours.",
+      "hoursNoteTh": "เป็นตรอกสาธารณะ ส่วนร้านช่างและงานจัดแสดงส่วนตัวเป็นสถานที่ทำงานที่มีเวลาของตัวเอง",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H12",
+          "title": "Visit Bangkok (Bangkok city): Charoen Krung street art",
+          "url": "https://visit.bangkok.go.th/th/place/2782"
+        },
+        {
+          "id": "H13",
+          "title": "Thailand Tourism Directory: Street art at Trok Rong Kuek Shrine",
+          "url": "https://www.thailandtourismdirectory.go.th/en/attraction/103461"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "VisitBangkok lists 24-hour access for the broader Charoen Krung street-art area; this is lane access, not workshop hours."
     },
     {
       "approved": true,
       "category": "Belief",
-      "hours": "",
+      "hours": "Mon 06:00–16:00; Tue 06:00–16:00; Wed 06:00–16:00; Thu 06:00–16:00; Fri 06:00–16:00; Sat 06:00–16:00; Sun 06:00–16:00",
       "icon": "pin",
       "id": "chow-sue-kong",
       "illustrationEstimated": false,
@@ -417,7 +606,58 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: 758 Soi Phanu Rangsi (ภาณุรังษี), Talat Noi, as listed by TAT.\n\nEditorial check: The ritual description is historical and cultural. Do not promise a specific festival day without the shrine’s current calendar or make health claims. Leave current access and hours for the editor to confirm.\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: 758 Soi Phanu Rangsi (ภาณุรังษี), Talat Noi, as listed by TAT.\n\nEditorial check: The ritual description is historical and cultural. Do not promise a specific festival day without the shrine’s current calendar or make health claims. Leave current access and hours for the editor to confirm.\n\nField check before enabling directions: Check the visitor entrance and posted access rules. Keep a gate, a worship space, a school driveway and a public walking route distinct in the data. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "published",
+      "hoursScope": "worship",
+      "weeklyHours": {
+        "mon": "06:00-16:00",
+        "tue": "06:00-16:00",
+        "wed": "06:00-16:00",
+        "thu": "06:00-16:00",
+        "fri": "06:00-16:00",
+        "sat": "06:00-16:00",
+        "sun": "06:00-16:00"
+      },
+      "hoursExceptions": [],
+      "hoursLabelEn": "Published schedule · worship area",
+      "hoursLabelTh": "เวลาตามประกาศ · พื้นที่สักการะ",
+      "hoursNoteEn": "Hours for the worship area, from the shrine foundation’s notice of 18 June 2026.",
+      "hoursNoteTh": "เวลาของพื้นที่สักการะ ตามประกาศของมูลนิธิศาลเจ้าเมื่อ 18 มิ.ย. 2569",
+      "hoursReports": [
+        {
+          "source": "Tourism Authority of Thailand: 1 day in Talat Noi",
+          "url": "https://www.tourismthailand.org/Articles/1-day-in-talat-noi",
+          "text": "07:00–16:00 (older guide)",
+          "textTh": "07:00–16:00 (คู่มือฉบับเก่า)"
+        }
+      ],
+      "otherTimes": [
+        {
+          "labelEn": "Shrine office (not the worship area)",
+          "labelTh": "สำนักงานศาลเจ้า (ไม่ใช่พื้นที่สักการะ)",
+          "textEn": "Mon–Sat 08:30–16:00 · closed Sun and public holidays",
+          "textTh": "จ.–ส. 08:30–16:00 · ปิดวันอาทิตย์และวันหยุดนักขัตฤกษ์"
+        }
+      ],
+      "hoursSources": [
+        {
+          "id": "H14",
+          "title": "Chow Sue Kong Shrine foundation notice, 18 June 2026 (republished by FindGlocal)",
+          "url": "https://www.findglocal.com/TH/Bangkok/670965572992461/%E0%B8%A1%E0%B8%B9%E0%B8%A5%E0%B8%99%E0%B8%B4%E0%B8%98%E0%B8%B4%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B9%82%E0%B8%88%E0%B8%8B%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%87-%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2-Chowsuekong-TJK"
+        },
+        {
+          "id": "H15",
+          "title": "Waze: Chow Sue Kong Shrine, 758 Soi Phanu Rangsi",
+          "url": "https://www.waze.com/live-map/directions/th/krung-thep-maha-nakhon/%E0%B8%A8%E0%B8%B2%E0%B8%A5%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B9%82%E0%B8%88%E0%B8%A7%E0%B8%8B%E0%B8%B7%E0%B8%AD%E0%B8%81%E0%B8%87-%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2?to=place.ChIJf4RfXTaZ4jARTaVnsogpboA"
+        },
+        {
+          "id": "H05",
+          "title": "Tourism Authority of Thailand: 1 day in Talat Noi",
+          "url": "https://www.tourismthailand.org/Articles/1-day-in-talat-noi"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Foundation notice (18 Jun 2026) and Waze agree on 06:00–16:00 daily for worship. Office times kept separate. TAT shrine Maps link: https://maps.app.goo.gl/DnJNSozKPpQ8H6Ka7"
     },
     {
       "approved": true,
@@ -474,7 +714,31 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: The orange frontage and row of lanterns in P01 are the visual clues. Keep the specific location pending.\n\nEditorial check: Reporting identifies Hia Seng's shopfront display near Wanit 2 and Charoen Krung Soi 22 as a lead. Match the orange façade and exact figures in person before assigning this photo to the workshop or naming its owner or maker. Leave Directions off. [S20]\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nEditor-only leads: S20 Phuket 101, Talat Noi walking guide, “The Scrap Metal Transformers of Talat Noi” https://www.phuket101.net/bangkok/talat-noi-in-bangkok/\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: The orange frontage and row of lanterns in P01 are the visual clues. Keep the specific location pending.\n\nEditorial check: Reporting identifies Hia Seng's shopfront display near Wanit 2 and Charoen Krung Soi 22 as a lead. Match the orange façade and exact figures in person before assigning this photo to the workshop or naming its owner or maker. Leave Directions off. [S20]\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nEditor-only leads: S20 Phuket 101, Talat Noi walking guide, “The Scrap Metal Transformers of Talat Noi” https://www.phuket101.net/bangkok/talat-noi-in-bangkok/\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "outdoor",
+      "hoursScope": "",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Outdoor display · exact spot to confirm",
+      "hoursLabelTh": "จุดชมงานกลางแจ้ง · รอยืนยันตำแหน่ง",
+      "hoursNoteEn": "No fixed hours. View it from the public side; there is no access inside the workshop.",
+      "hoursNoteTh": "ไม่มีเวลาเปิดปิดตายตัว ชมจากทางสาธารณะ ไม่มีการเข้าไปด้านในร้าน",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H16",
+          "title": "Phuket 101: Talat Noi walking guide",
+          "url": "https://www.phuket101.net/bangkok/talat-noi-in-bangkok/"
+        },
+        {
+          "id": "H17",
+          "title": "Local Thailand: Megatron (possible match only)",
+          "url": "https://localthailand.net/en/thurakit/megatron-samphanthawong"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Phuket 101 documents a robot shopfront nearby; the Megatron directory entry has no hours and is only a possible match for P01."
     },
     {
       "approved": true,
@@ -521,12 +785,25 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: No reliable shop name, street number or exact spot was identifiable from P02. Use the photo as a field note.\n\nEditorial check: Keep as **Field note**. The glass case alone does not establish ingredients, a noodle specialty or a specific vendor. Record sign, corner or street number, vendor-confirmed menu and coordinates on a return visit. Do not attach it to a known noodle shop by resemblance. Leave Directions off.\n\nField check before enabling directions: Ask the vendor for the shop name, dishes, usual operating window, and whether the cart moves. Log the entrance or usual public-side spot. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: No reliable shop name, street number or exact spot was identifiable from P02. Use the photo as a field note.\n\nEditorial check: Keep as **Field note**. The glass case alone does not establish ingredients, a noodle specialty or a specific vendor. Record sign, corner or street number, vendor-confirmed menu and coordinates on a return visit. Do not attach it to a known noodle shop by resemblance. Leave Directions off.\n\nField check before enabling directions: Ask the vendor for the shop name, dishes, usual operating window, and whether the cart moves. Log the entrance or usual public-side spot. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "unknown",
+      "hoursScope": "",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Hours not confirmed",
+      "hoursLabelTh": "ยังไม่ยืนยันเวลาเปิดปิด",
+      "hoursNoteEn": "If it’s serving when you pass, ask what’s available.",
+      "hoursNoteTh": "ถ้าเดินผ่านแล้วร้านกำลังขาย ลองถามว่ามีอะไรบ้าง",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "No vendor name or schedule matched to P02."
     },
     {
       "approved": true,
       "category": "Food & drink",
-      "hours": "",
+      "hours": "Mon 07:00–14:00; Tue 07:00–14:00; Wed 07:00–14:00; Thu 07:00–14:00; Fri 07:00–14:00; Sat 07:00–14:00; Sun closed",
       "icon": "pin",
       "id": "fieldwork-p03",
       "illustrationEstimated": false,
@@ -594,7 +871,44 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: No. 24, Charoen Krung Soi 22, Talat Noi. The door number, teal and cream folding frontage, arch and photo-covered panels in P03 are the useful field markers. [S21] [S22] [S23]\n\nEditorial check: The CEA project confirms the named shop and Soi 22. The VNA report reproduces a labeled Bangkok Post storefront photo that matches the teal frontage and doorway details; published address and door number corroborate. Keep hours, stock and price out of the durable story. Confirm the entrance pin.\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: No. 24, Charoen Krung Soi 22, Talat Noi. The door number, teal and cream folding frontage, arch and photo-covered panels in P03 are the useful field markers. [S21] [S22] [S23]\n\nEditorial check: The CEA project confirms the named shop and Soi 22. The VNA report reproduces a labeled Bangkok Post storefront photo that matches the teal frontage and doorway details; published address and door number corroborate. Keep hours, stock and price out of the durable story. Confirm the entrance pin.\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "published",
+      "hoursScope": "shop",
+      "weeklyHours": {
+        "mon": "07:00-14:00",
+        "tue": "07:00-14:00",
+        "wed": "07:00-14:00",
+        "thu": "07:00-14:00",
+        "fri": "07:00-14:00",
+        "sat": "07:00-14:00",
+        "sun": "closed"
+      },
+      "hoursExceptions": [],
+      "hoursLabelEn": "Published schedule · shop",
+      "hoursLabelTh": "เวลาตามประกาศ · ร้าน",
+      "hoursNoteEn": "Go earlier if you’re looking for a particular filling.",
+      "hoursNoteTh": "ถ้าอยากได้ไส้ที่ชอบ ไปแต่เช้าจะดีกว่า",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H18",
+          "title": "Creative Economy Agency: Made in Charoenkrung Year 1, Khun Pu’s Curry Puffs",
+          "url": "https://creativecity.cea.or.th/th/district-projects/made-in-charoenkrung-year-1"
+        },
+        {
+          "id": "H19",
+          "title": "Wongnai: Khun Pu’s Curry Puffs, Talat Noi",
+          "url": "https://www.wongnai.com/restaurants/203984lw"
+        },
+        {
+          "id": "H20",
+          "title": "Local Thailand: Karipap Khun Pu, No. 24",
+          "url": "https://localthailand.net/thurakit/karipap-khunpu-samphanthawong"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "CEA, Wongnai (Talat Noi merchant) and the No. 24 directory agree: Mon–Sat 07:00–14:00, Sun closed. Stock is separate from hours."
     },
     {
       "approved": true,
@@ -646,7 +960,44 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: Charoen Krung Soi 22. The directory lists No. 16; verify this with the studio before publishing the street number or placing a route pin. [S25]\n\nEditorial check: Do not treat the number 22 in the brand or a number on a separate sign as a street address. Listing metadata is a lead for the exact door, not proof of current hours or prices. No shared ownership with the souvenir stall was verified.\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: Charoen Krung Soi 22. The directory lists No. 16; verify this with the studio before publishing the street number or placing a route pin. [S25]\n\nEditorial check: Do not treat the number 22 in the brand or a number on a separate sign as a street address. Listing metadata is a lead for the exact door, not proof of current hours or prices. No shared ownership with the souvenir stall was verified.\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "check",
+      "hoursScope": "shop",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Hours vary · ask about a slot",
+      "hoursLabelTh": "เวลาต่างกันตามวัน · สอบถามคิวกับร้าน",
+      "hoursNoteEn": "Listings disagree on Wednesday and Friday. Ask the studio about a slot.",
+      "hoursNoteTh": "แต่ละแหล่งระบุเวลาวันพุธและวันศุกร์ไม่ตรงกัน สอบถามคิวกับร้านก่อน",
+      "hoursReports": [
+        {
+          "source": "Local Thailand: 22 Barber & Hair Studio, 16 Soi Charoen Krung 22",
+          "url": "https://localthailand.net/thurakit/22-barber-hair-studio-private-one-on-one-service-samphanthawong",
+          "text": "09:00–18:00; Fri 09:00–19:00",
+          "textTh": "09:00–18:00; ศ. 09:00–19:00"
+        },
+        {
+          "source": "Bangkok.biz: 22 Barber & Hair Studio",
+          "url": "https://bangkok.biz/business/22-barber-and-hair-studio-private-one-on-one-service",
+          "text": "09:00–18:00; Wed 09:00–15:00",
+          "textTh": "09:00–18:00; พ. 09:00–15:00"
+        }
+      ],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H21",
+          "title": "Local Thailand: 22 Barber & Hair Studio, 16 Soi Charoen Krung 22",
+          "url": "https://localthailand.net/thurakit/22-barber-hair-studio-private-one-on-one-service-samphanthawong"
+        },
+        {
+          "id": "H22",
+          "title": "Bangkok.biz: 22 Barber & Hair Studio",
+          "url": "https://bangkok.biz/business/22-barber-and-hair-studio-private-one-on-one-service"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Both listings are for 16 Soi Charoen Krung 22. Confirm Wed/Fri hours and how to book directly before using a status badge."
     },
     {
       "approved": true,
@@ -708,7 +1059,41 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: No. 1172/8, Talat Noi, near the Marine Department lane according to the public business listing. Match the green frontage and the street number in P05 before enabling routing. [S26]\n\nEditorial check: The Thai name, No. 1172/8 and business phone printed on the photo corroborate the merchant listing. No verified founding story, owner biography, fixed menu, price or opening hours. Do not interpret “101” as proof that the vendor comes from Roi Et.\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: No. 1172/8, Talat Noi, near the Marine Department lane according to the public business listing. Match the green frontage and the street number in P05 before enabling routing. [S26]\n\nEditorial check: The Thai name, No. 1172/8 and business phone printed on the photo corroborate the merchant listing. No verified founding story, owner biography, fixed menu, price or opening hours. Do not interpret “101” as proof that the vendor comes from Roi Et.\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "check",
+      "hoursScope": "shop",
+      "weeklyHours": {
+        "mon": "13:00-23:59",
+        "tue": "13:00-23:59",
+        "wed": "13:00-23:59",
+        "thu": "13:00-23:59",
+        "sun": "13:00-23:59",
+        "fri": "12:30-01:00",
+        "sat": "11:00-23:59"
+      },
+      "hoursExceptions": [],
+      "hoursLabelEn": "Check with the stall",
+      "hoursLabelTh": "สอบถามเวลาที่ร้าน",
+      "hoursNoteEn": "Wongnai-listed hours; walk-up times to confirm.",
+      "hoursNoteTh": "เวลาตามที่ลงใน Wongnai เวลาขายหน้าร้านยังต้องยืนยัน",
+      "hoursReports": [
+        {
+          "source": "Wongnai: Soraya Larb 101 (1172/8)",
+          "url": "https://www.wongnai.com/restaurants/431692fq-%E0%B9%82%E0%B8%AA%E0%B8%A3%E0%B8%A2%E0%B8%B2-%E0%B8%A5%E0%B8%B2%E0%B8%9A-101-%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%81%E0%B9%88%E0%B8%B2-%E0%B8%95%E0%B8%B3%E0%B9%81%E0%B8%8A%E0%B9%88%E0%B8%9A%E0%B8%99%E0%B8%B1%E0%B8%A7%E0%B9%80%E0%B8%A2%E0%B8%B2%E0%B8%A7%E0%B8%A3%E0%B8%B2%E0%B8%8A",
+          "text": "Mon–Thu 13:00–23:59; Fri 12:30–01:00 (next day); Sat 11:00–23:59; Sun 13:00–23:59",
+          "textTh": "จ.–พฤ. 13:00–23:59; ศ. 12:30–01:00 (วันถัดไป); ส. 11:00–23:59; อา. 13:00–23:59"
+        }
+      ],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H23",
+          "title": "Wongnai: Soraya Larb 101 (1172/8)",
+          "url": "https://www.wongnai.com/restaurants/431692fq-%E0%B9%82%E0%B8%AA%E0%B8%A3%E0%B8%A2%E0%B8%B2-%E0%B8%A5%E0%B8%B2%E0%B8%9A-101-%E0%B9%80%E0%B8%88%E0%B9%89%E0%B8%B2%E0%B9%80%E0%B8%81%E0%B9%88%E0%B8%B2-%E0%B8%95%E0%B8%B3%E0%B9%81%E0%B8%8A%E0%B9%88%E0%B8%9A%E0%B8%99%E0%B8%B1%E0%B8%A7%E0%B9%80%E0%B8%A2%E0%B8%B2%E0%B8%A7%E0%B8%A3%E0%B8%B2%E0%B8%8A"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Wongnai shop-hours section, stored as the weekly schedule but not used for status until the owner confirms walk-up times (late closes, Friday past midnight). The listing also has separate delivery windows."
     },
     {
       "approved": true,
@@ -770,7 +1155,31 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: Small paved island by the Holy Rosary Church street gateway in P07. Identify a safe public viewing point on the approach; do not route to the island.\n\nEditorial check: Treat the church and sculpture as different records. The photo and researcher’s documentation confirm the subject and vicinity; the public viewing location and continued presence still need on-site confirmation. Do not transfer stories about Optimus Prime’s offerings or rituals to this sculpture.\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: Small paved island by the Holy Rosary Church street gateway in P07. Identify a safe public viewing point on the approach; do not route to the island.\n\nEditorial check: Treat the church and sculpture as different records. The photo and researcher’s documentation confirm the subject and vicinity; the public viewing location and continued presence still need on-site confirmation. Do not transfer stories about Optimus Prime’s offerings or rituals to this sculpture.\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "outdoor",
+      "hoursScope": "",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Outdoor photo stop · view from the pavement",
+      "hoursLabelTh": "จุดถ่ายรูปกลางแจ้ง · ชมจากทางเท้า",
+      "hoursNoteEn": "No opening schedule, and separate from church admission.",
+      "hoursNoteTh": "ไม่มีเวลาเปิดปิด และไม่เกี่ยวกับการเข้าชมโบสถ์",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H25",
+          "title": "Cultural Heritage Studies Vienna: robot sculptures and heritage in Talat Noi",
+          "url": "https://hexagon-impala-fsmz.squarespace.com/gloco-blog/what-does-a-statue-of-optimus-prime-have-to-do-with-heritage-in-bangkok"
+        },
+        {
+          "id": "H24",
+          "title": "Local Thailand: Bumblebee directory entry",
+          "url": "https://localthailand.net/thurakit/bumblebee-samphanthawong"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "The Bumblebee directory entry lists 24-hour access at a Soi 22 address; it does not confirm the island/viewpoint in P07. Check current placement and the public viewing point."
     },
     {
       "approved": true,
@@ -842,7 +1251,31 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: The Department of Tourism and contemporary reporting document a display in Trok San Chao Rong Kueak. Match the wall and mounting brackets in P08 before setting a precise pin.\n\nEditorial check: Keep the actual display wall as the subject. The mosque is pictured in a print; do not rename this pin as a mosque or use its coordinates. Do not assume the 2020 display stayed up continuously, assign a photographer from a blurred byline, or promise the same prints are there now. Credit Jump for the field photo of the wall; retain any legible original artwork credits separately if they are confirmed.\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: The Department of Tourism and contemporary reporting document a display in Trok San Chao Rong Kueak. Match the wall and mounting brackets in P08 before setting a precise pin.\n\nEditorial check: Keep the actual display wall as the subject. The mosque is pictured in a print; do not rename this pin as a mosque or use its coordinates. Do not assume the 2020 display stayed up continuously, assign a photographer from a blurred byline, or promise the same prints are there now. Credit Jump for the field photo of the wall; retain any legible original artwork credits separately if they are confirmed.\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "outdoor",
+      "hoursScope": "",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Outdoor display · photos may change",
+      "hoursLabelTh": "งานจัดแสดงกลางแจ้ง · ภาพอาจเปลี่ยนได้",
+      "hoursNoteEn": "Best in daylight, if the prints are still up.",
+      "hoursNoteTh": "ถ้ายังมีภาพแขวนอยู่ แนะนำให้ชมช่วงกลางวัน",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H26",
+          "title": "Creative Economy Agency: Portrait of Charoenkrung",
+          "url": "https://creativecity.cea.or.th/th/district-projects/portrait-of-charoenkrung"
+        },
+        {
+          "id": "H13",
+          "title": "Thailand Tourism Directory: Street art at Trok Rong Kuek Shrine",
+          "url": "https://www.thailandtourismdirectory.go.th/en/attraction/103461"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Neither source confirms current display or that the 2020 prints are still installed."
     },
     {
       "approved": true,
@@ -909,7 +1342,60 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: No. 1172 in the Charoen Krung Soi 22 / Trok San Chao Rong Kueak area. P09 shows the number, yellow mural and shared doorway signage. [S30] [S31] [S32]\n\nEditorial check: Sources vary on the original stand’s opening year and current café hours. Use the documented move by 2020 and the founder’s account of how she started. The photo establishes the signs sharing a frontage on the field visit, not a current partnership or common owner. Elephant Parade's official directory may list a different address; do not use it to overwrite the café location. Confirm current stairs/access before claiming accessibility. [S33]\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nEditor-only leads: S33 Elephant Parade, official store directory https://www.elephantparade.com/find-a-store?country=Thailand\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: No. 1172 in the Charoen Krung Soi 22 / Trok San Chao Rong Kueak area. P09 shows the number, yellow mural and shared doorway signage. [S30] [S31] [S32]\n\nEditorial check: Sources vary on the original stand’s opening year and current café hours. Use the documented move by 2020 and the founder’s account of how she started. The photo establishes the signs sharing a frontage on the field visit, not a current partnership or common owner. Elephant Parade's official directory may list a different address; do not use it to overwrite the café location. Confirm current stairs/access before claiming accessibility. [S33]\n\nField check before enabling directions: Match the photographed doorway and business name on site. Record opening information with a date. Check whether access requires stairs, a reservation or permission before publishing those details. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nEditor-only leads: S33 Elephant Parade, official store directory https://www.elephantparade.com/find-a-store?country=Thailand\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "check",
+      "hoursScope": "shop",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Check hours, especially Sunday",
+      "hoursLabelTh": "เช็กเวลาเปิดปิด โดยเฉพาะวันอาทิตย์",
+      "hoursNoteEn": "If it’s open, this is a good coffee break.",
+      "hoursNoteTh": "ถ้าร้านเปิด เป็นจุดพักจิบกาแฟที่ดี",
+      "hoursReports": [
+        {
+          "source": "Wongnai: Mother Roaster Talat Noi (1172)",
+          "url": "https://www.wongnai.com/restaurants/389051aw-mother-roaster-%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2-talat-noi",
+          "text": "Daily 10:00–17:00",
+          "textTh": "ทุกวัน 10:00–17:00"
+        },
+        {
+          "source": "bkkbrew: Mother Roaster Talat Noi",
+          "url": "https://www.bkkbrew.com/shop/mother-roaster-taladnoi",
+          "text": "Mon–Sat 09:30–17:30; Sun closed",
+          "textTh": "จ.–ส. 09:30–17:30; ปิดวันอาทิตย์"
+        },
+        {
+          "source": "Tourism Authority of Thailand, Japan office: Mother Roaster",
+          "url": "https://www.thailandtravel.or.jp/mother-roaster/",
+          "text": "10:00–18:00; irregular days off",
+          "textTh": "10:00–18:00; มีวันหยุดไม่แน่นอน"
+        }
+      ],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H27",
+          "title": "Wongnai: Mother Roaster Talat Noi (1172)",
+          "url": "https://www.wongnai.com/restaurants/389051aw-mother-roaster-%E0%B8%95%E0%B8%A5%E0%B8%B2%E0%B8%94%E0%B8%99%E0%B9%89%E0%B8%AD%E0%B8%A2-talat-noi"
+        },
+        {
+          "id": "H28",
+          "title": "bkkbrew: Mother Roaster Talat Noi",
+          "url": "https://www.bkkbrew.com/shop/mother-roaster-taladnoi"
+        },
+        {
+          "id": "H29",
+          "title": "Filter Notes: Mother Roaster",
+          "url": "https://www.filternotes.com/bangkok/mother-roaster"
+        },
+        {
+          "id": "H30",
+          "title": "Tourism Authority of Thailand, Japan office: Mother Roaster",
+          "url": "https://www.thailandtravel.or.jp/mother-roaster/"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "Match the 1172 branch. Filter Notes reports a Sunday disagreement with Google Maps. Leave Sunday unresolved until the branch confirms."
     },
     {
       "approved": true,
@@ -972,12 +1458,31 @@
       "entranceConfirmedOn": "",
       "entranceNote": "",
       "researchReviewedOn": "2026-11-11",
-      "editorNotes": "Location reference: Published coverage places the recognizable noodle-eating rickshaw scene in Soi Duang Tawan, near So Heng Tai. Confirm the exact wall face, a clear public standing point and the artist credit before enabling navigation. [S34] [S35]\n\nEditorial check: The current title is descriptive, not an official artwork title. Coverage locates the rickshaw motif at lane level. Do not infer that the adjacent blacksmith panel has the same artist, commission or painting date. Do not present the visual interpretation as a quote from the artist.\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026."
+      "editorNotes": "Location reference: Published coverage places the recognizable noodle-eating rickshaw scene in Soi Duang Tawan, near So Heng Tai. Confirm the exact wall face, a clear public standing point and the artist credit before enabling navigation. [S34] [S35]\n\nEditorial check: The current title is descriptive, not an official artwork title. Coverage locates the rickshaw motif at lane level. Do not infer that the adjacent blacksmith panel has the same artist, commission or painting date. Do not present the visual interpretation as a quote from the artist.\n\nField check before enabling directions: Confirm the exact display or wall, current presence, photo viewpoint and where a visitor can stand without blocking access. Identify the maker or artist only from a signature, organizer or direct confirmation. Log which entrance or viewpoint was confirmed, how, and when. A researched story and a verified navigation point are separate checks.\n\nResearch brief: Talat Noi Claude Map Content Prompt, research review 11 Nov 2026.",
+      "hoursStatus": "outdoor",
+      "hoursScope": "",
+      "weeklyHours": {},
+      "hoursExceptions": [],
+      "hoursLabelEn": "Outdoor artwork · best in daylight",
+      "hoursLabelTh": "งานศิลปะกลางแจ้ง · แนะนำช่วงกลางวัน",
+      "hoursNoteEn": "View it from public space. The scene may change.",
+      "hoursNoteTh": "ชมจากพื้นที่สาธารณะ ภาพอาจเปลี่ยนแปลงได้",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [
+        {
+          "id": "H31",
+          "title": "BK Magazine: Talat Noi murals",
+          "url": "https://www.bkmagazine.com/city-living/these-murals-highlight-talad-nois-rise-bangkoks-hub-street-art/"
+        }
+      ],
+      "hoursReviewedOn": "2026-11-11",
+      "hoursEditorNotes": "No venue hours for the exact wall."
     },
     {
       "approved": true,
       "category": "Food & drink",
-      "hours": "Daily 9:30 AM – 7:00 PM",
+      "hours": "Mon 09:30–19:00; Tue 09:30–19:00; Wed 09:30–19:00; Thu 09:30–19:00; Fri 09:30–19:00; Sat 09:30–19:00; Sun 09:30–19:00",
       "icon": "pin",
       "id": "32bar-x-chocolate",
       "illustrationEstimated": true,
@@ -1020,7 +1525,28 @@
       "entranceConfirmedOn": "",
       "entranceNote": "Location supplied by Jump: Google Maps plus code PGM7+F53 (13.733639, 100.5129327), 10 Nov 2026.",
       "researchReviewedOn": "",
-      "editorNotes": "Added from Jump's visit and photo, 10 Nov 2026. Award details not independently confirmed."
+      "editorNotes": "Added from Jump's visit and photo, 10 Nov 2026. Award details not independently confirmed.",
+      "hoursStatus": "published",
+      "hoursScope": "shop",
+      "weeklyHours": {
+        "mon": "09:30-19:00",
+        "tue": "09:30-19:00",
+        "wed": "09:30-19:00",
+        "thu": "09:30-19:00",
+        "fri": "09:30-19:00",
+        "sat": "09:30-19:00",
+        "sun": "09:30-19:00"
+      },
+      "hoursExceptions": [],
+      "hoursLabelEn": "Published schedule · shop",
+      "hoursLabelTh": "เวลาตามประกาศ · ร้าน",
+      "hoursNoteEn": "From the sign on the shop window.",
+      "hoursNoteTh": "ตามป้ายที่หน้าร้าน",
+      "hoursReports": [],
+      "otherTimes": [],
+      "hoursSources": [],
+      "hoursReviewedOn": "2026-11-10",
+      "hoursEditorNotes": "OPEN DAILY 09:30 AM – 7:00 PM on the shop window in Jump’s photo (10 Nov 2026)."
     }
   ],
   "structures": [
@@ -1255,8 +1781,8 @@
       "y": 40.50509
     }
   ],
-  "revision": 12,
-  "publishedRevision": 12,
-  "updatedAt": "2026-11-11T06:37:20.000Z",
-  "publishedAt": "2026-11-11T06:37:20.000Z"
+  "revision": 13,
+  "publishedRevision": 13,
+  "updatedAt": "2026-11-11T18:54:47.000Z",
+  "publishedAt": "2026-11-11T18:54:47.000Z"
 }

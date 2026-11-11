@@ -101,6 +101,87 @@
         )
         .default(""),
       editorNotes: Yt.string().trim().max(4000).default(""),
+      // Talat Noi editor: researched opening information (soft-launch brief, 11 Nov 2026).
+      // weeklyHours / exception hours use Bangkok time: "" = not listed, "closed", or
+      // "09:00-18:00, 19:00-21:00"; a close earlier than the open means the next day.
+      hoursStatus: Yt.enum(["", "published", "listed", "check", "unknown", "outdoor", "area"]).default(""),
+      hoursScope: Yt.enum(["", "visitor", "worship", "office", "shop", "delivery", "event"]).default(""),
+      weeklyHours: Yt.object(
+        Object.fromEntries(
+          ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((d) => [
+            d,
+            Yt.string()
+              .trim()
+              .regex(
+                /^(|closed|\d{2}:\d{2}\s*[-–]\s*\d{2}:\d{2}(\s*,\s*\d{2}:\d{2}\s*[-–]\s*\d{2}:\d{2})*)$/i,
+                "Use 09:00-18:00, several ranges separated by commas, closed, or leave it empty.",
+              )
+              .default(""),
+          ]),
+        ),
+      ).default({}),
+      hoursExceptions: Yt.array(
+        Yt.object({
+          date: Yt.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use a date (YYYY-MM-DD)."),
+          hours: Yt.string()
+            .trim()
+            .regex(
+              /^(closed|\d{2}:\d{2}\s*[-–]\s*\d{2}:\d{2}(\s*,\s*\d{2}:\d{2}\s*[-–]\s*\d{2}:\d{2})*)$/i,
+              "Use 09:00-18:00 or closed.",
+            ),
+          noteEn: Yt.string().trim().max(300).default(""),
+          noteTh: Yt.string().trim().max(300).default(""),
+        }),
+      )
+        .max(40)
+        .default([]),
+      hoursLabelEn: Yt.string().trim().max(160).default(""),
+      hoursLabelTh: Yt.string().trim().max(160).default(""),
+      hoursNoteEn: Yt.string().trim().max(600).default(""),
+      hoursNoteTh: Yt.string().trim().max(600).default(""),
+      hoursReports: Yt.array(
+        Yt.object({
+          source: Yt.string().trim().min(1, "Name the listing.").max(200),
+          url: Yt.string()
+            .trim()
+            .max(1500)
+            .regex(/^(|https:\/\/[^\s]+)$/i, "Use an https link or leave it empty.")
+            .default(""),
+          text: Yt.string().trim().max(300).default(""),
+          textTh: Yt.string().trim().max(300).default(""),
+        }),
+      )
+        .max(10)
+        .default([]),
+      otherTimes: Yt.array(
+        Yt.object({
+          labelEn: Yt.string().trim().min(1).max(120),
+          labelTh: Yt.string().trim().max(120).default(""),
+          textEn: Yt.string().trim().max(300).default(""),
+          textTh: Yt.string().trim().max(300).default(""),
+        }),
+      )
+        .max(6)
+        .default([]),
+      hoursSources: Yt.array(
+        Yt.object({
+          id: Yt.string().trim().max(12).default(""),
+          title: Yt.string().trim().min(1, "Give each source a title.").max(300),
+          url: Yt.string()
+            .trim()
+            .max(1500)
+            .regex(/^https:\/\/[^\s]+$/i, "Use an https link for each source."),
+        }),
+      )
+        .max(12)
+        .default([]),
+      hoursReviewedOn: Yt.string()
+        .refine(
+          (t) => !t || (/^\d{4}-\d{2}-\d{2}$/.test(t) && !Number.isNaN(Date.parse(t))),
+          "Use a real date (YYYY-MM-DD).",
+        )
+        .default(""),
+      hoursEditorNotes: Yt.string().trim().max(4000).default(""),
     }).superRefine((t, e) => {
       ((t.lat === null) != (t.lng === null) &&
         e.addIssue({
@@ -4428,13 +4509,24 @@
   function Ys({ place: t, small: e = !1 }) {
     let [n, a] = (0, LU.useState)(""),
       i = !!n && n === t.photoUrl;
+    // Talat Noi editor: small photos use a 240 px thumbnail (assets/thumbs/…webp) and fall
+    // back to the full photo if the thumbnail is missing.
+    let thumb = e && /^assets\/(?!thumbs\/)/.test(t.photoUrl) ? t.photoUrl.replace(/^assets\/(.+)\.\w+$/, "assets/thumbs/$1.webp") : "";
     return t.photoUrl && !i
       ? (0, Pm.jsx)("img", {
           className: e ? "stop-photo" : "place-photo",
-          src: t.photoUrl,
-          alt: t.photoAlt || t.nameEn,
+          src: thumb || t.photoUrl,
+          alt: e ? "" : t.photoAlt || t.nameEn,
           loading: "lazy",
-          onError: () => a(t.photoUrl),
+          decoding: "async",
+          onError: (r) => {
+            if (thumb && r.currentTarget.dataset.fallback !== "1") {
+              r.currentTarget.dataset.fallback = "1";
+              r.currentTarget.src = t.photoUrl;
+              return;
+            }
+            a(t.photoUrl);
+          },
         })
       : (0, Pm.jsxs)("div", {
           className: e ? "stop-photo photo-empty" : "place-photo photo-empty",

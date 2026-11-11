@@ -141,3 +141,31 @@ later from the claude.ai map are only included after that file is updated.
 - The 15 entries were written from the brief by a script that matched each record by its
   current title and photo file before updating it in place; the Thai "story and visit
   note" block was split into `storyTh` and `tipTh` where the visit advice begins.
+
+## Soft launch: hours, phone layout and sharing (brief of 11 Nov 2026)
+
+- Hours fields (schema, with defaults): `hoursStatus` (`published`, `listed`, `check`,
+  `unknown`, `outdoor`, `area`), `hoursScope`, `weeklyHours` (`mon`…`sun`: "", "closed" or
+  ranges), `hoursExceptions` (`{date, hours, noteEn, noteTh}`), `hoursLabelEn/Th`,
+  `hoursNoteEn/Th`, `hoursReports` (other listings), `otherTimes` (Mass, office),
+  `hoursSources`, `hoursReviewedOn`, `hoursEditorNotes`. `scripts/guide/apply_hours.py` holds
+  the researched values and their sources (H01–H31).
+- `scheduleState(place, now)` in `src/app/guide.jsx` reads Bangkok time with
+  `Intl.DateTimeFormat(..., {timeZone: "Asia/Bangkok"})`, so a phone in another time zone
+  gets the same answer. Only published/listed schedules reviewed in the last 183 days can be
+  open or closed; overnight ranges spill into the next morning; an empty day is "not listed",
+  not "closed"; a special date replaces that day.
+- Phone layout (`src/styles/guide.css`, visitor view only; also short landscape screens):
+  title/language row, full-width search and a filter button (categories, an optional
+  “Open by schedule now”, map views), a visible reset when filters are on, a floating
+  Map/List and Plan your walk dock, zoom above it, and pin labels only for the selected pin
+  until the visitor zooms in.
+- Plan your walk passes its chapter to the card, which then offers **Next stop** and nearby
+  alternatives from the same chapter.
+- Small photos use 240 px thumbnails in `assets/thumbs/` (falling back to the full photo).
+  The illustration shows a loading message, and if it fails, a message with **Open the
+  list**.
+- `src/app/share.jsx`: Share map. `SHARE_URL` is the only link used by the share sheet, copy
+  link and QR. The QR is drawn by the vendored `qrcode-generator` (MIT,
+  `src/vendor/qrcode-generator.js`); **Download QR** saves a 1,215 px PNG through the
+  artifact `downloads` capability or a normal download.

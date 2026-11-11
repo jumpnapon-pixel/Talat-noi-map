@@ -37,6 +37,11 @@ On `localhost` the editor is available and saves to your browser only. Published
 claude.ai artifact, it saves to the artifact's shared database and asset store. Only the
 artifact's Editors and Owner can edit there.
 
+## Share link and QR
+
+The in-app **Share map** button, copy link and QR use `SHARE_URL` in `src/app/share.jsx`.
+Change it there when the launch link changes, then rebuild.
+
 ## Share as one file
 
 ```sh

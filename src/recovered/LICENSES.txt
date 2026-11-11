@@ -129,4 +129,12 @@ lucide-react/dist/esm/lucide-react.mjs:
    * This source code is licensed under the ISC license.
    * See the LICENSE file in the root directory of this source tree.
    *)
+
+qrcode-generator (src/vendor/qrcode-generator.js):
+  (**
+   * QR Code Generator for JavaScript, version 1.4.4
+   * Copyright (c) 2009 Kazuhiko Arase
+   * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+   * The word 'QR Code' is a registered trademark of DENSO WAVE INCORPORATED.
+   *)
 */

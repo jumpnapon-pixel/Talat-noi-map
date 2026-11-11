@@ -258,12 +258,12 @@ function RelatedField({ value, places, currentId, onChange }) {
 }
 
 // Source links shown on the card under "Sources".
-function SourcesField({ value, onChange, error }) {
+function SourcesField({ value, onChange, error, label = "Sources" }) {
   const sources = value ?? [];
   const update = (index, patch) => onChange(sources.map((source, i) => (i === index ? { ...source, ...patch } : source)));
   return (
     <div className="ed-field ed-sources" data-testid="sources-field">
-      <span className="ed-label">Sources</span>
+      <span className="ed-label">{label}</span>
       {sources.map((source, index) => (
         <div key={index} className="ed-source-row">
           <input
@@ -318,6 +318,47 @@ function DateField({ label, value, onChange, name, testId }) {
         onChange={(event) => onChange(event.target.value)}
         data-testid={testId}
       />
+    </div>
+  );
+}
+
+// Editable rows of small text inputs (other hours listings, service times, exceptions).
+function RowsField({ label, hint, value, fields, onChange, addLabel, max = 10, error, testId }) {
+  const rows = value ?? [];
+  const update = (index, key, text) => onChange(rows.map((row, i) => (i === index ? { ...row, [key]: text } : row)));
+  const blank = Object.fromEntries(fields.map((field) => [field.key, ""]));
+  return (
+    <div className="ed-field ed-rows" data-testid={testId}>
+      <span className="ed-label">{label}</span>
+      {hint && <small className="ed-hint">{hint}</small>}
+      {rows.map((row, index) => (
+        <div key={index} className="ed-row">
+          {fields.map((field) => (
+            <input
+              key={field.key}
+              aria-label={`${label} ${index + 1}: ${field.label}`}
+              placeholder={field.label}
+              value={row[field.key] ?? ""}
+              type={field.type || "text"}
+              lang={field.lang}
+              maxLength={field.maxLength || 300}
+              onChange={(event) => update(index, field.key, event.target.value)}
+            />
+          ))}
+          <button
+            type="button"
+            className="ed-icon-button"
+            aria-label={`Remove ${label.toLowerCase()} ${index + 1}`}
+            onClick={() => onChange(rows.filter((_, i) => i !== index))}
+          >
+            <Icon.X size={16} />
+          </button>
+        </div>
+      ))}
+      <Button type="button" size="sm" variant="outline" onClick={() => onChange([...rows, blank])} disabled={rows.length >= max}>
+        <Icon.Plus /> {addLabel}
+      </Button>
+      {error && <small className="ed-error">{error}</small>}
     </div>
   );
 }

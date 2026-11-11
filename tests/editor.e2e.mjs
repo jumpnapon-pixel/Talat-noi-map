@@ -14,11 +14,15 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 const { chromium, devices } = require("playwright");
+const { PNG } = require("pngjs");
+const jsQRModule = require("jsqr");
+const jsQR = jsQRModule.default ?? jsQRModule;
 const root = fileURLToPath(new URL("..", import.meta.url));
 const page = process.argv.slice(2).find((arg) => !arg.startsWith("--")) ?? "index.html";
-const only = process.argv.find((arg) => arg.startsWith("--only="))?.slice(7).split(",") ?? ["visitor", "guide", "desktop", "mobile"];
+const only = process.argv.find((arg) => arg.startsWith("--only="))?.slice(7).split(",") ?? ["visitor", "guide", "launch", "desktop", "mobile"];
 const shots = join(root, "test-results");
 const seed = JSON.parse(readFileSync(join(root, "src/data/published-seed.json"), "utf8"));
+const SHARE_URL = readFileSync(join(root, "src/app/share.jsx"), "utf8").match(/const SHARE_URL = "([^"]+)"/)[1];
 mkdirSync(shots, { recursive: true });
 
 // ---- static server -------------------------------------------------------------------------
@@ -112,19 +116,21 @@ const check = (ok, label, detail = "") => {
 };
 const assets = new Map();
 
-async function openPage(browser, { role = "editor", device = null, fresh = false } = {}) {
-  const context = await browser.newContext(device ? { ...devices[device] } : { viewport: { width: 1366, height: 860 } });
+async function openPage(browser, { role = "editor", device = null, fresh = false, options = {}, time = null, url = base, guest = false, init = null } = {}) {
+  const context = await browser.newContext({ ...(device ? { ...devices[device] } : { viewport: { width: 1366, height: 860 } }), ...options });
   await context.exposeBinding("__storeAsset", (_source, id, b64, type) => assets.set(id, { body: Buffer.from(b64, "base64"), type }));
   await context.route("**/_blob/*", (route) => {
     const asset = assets.get(route.request().url().split("/_blob/")[1]);
     return asset ? route.fulfill({ body: asset.body, contentType: asset.type }) : route.fulfill({ status: 404 });
   });
-  await context.addInitScript(installFakeRuntime, { role });
+  if (!guest) await context.addInitScript(installFakeRuntime, { role });
+  if (init) await context.addInitScript(init);
   const tab = await context.newPage();
+  if (time) await tab.clock.setFixedTime(new Date(time));
   const errors = [];
   tab.on("pageerror", (error) => errors.push(error.message));
   tab.on("console", (message) => message.type() === "error" && errors.push(message.text()));
-  await tab.goto(base, { waitUntil: "networkidle" });
+  await tab.goto(url, { waitUntil: "networkidle" });
   if (fresh) {
     await tab.evaluate(() => localStorage.clear());
     await tab.reload({ waitUntil: "networkidle" });
@@ -188,7 +194,12 @@ function tinyPng() {
 }
 
 // ---- scenarios --------------------------------------------------------------------------------
-const browser = await chromium.launch();
+const browser = await chromium.launch({ args: ["--host-resolver-rules=MAP guest.test 127.0.0.1"] });
+
+async function decodeQr(locator) {
+  const png = PNG.sync.read(await locator.screenshot());
+  return jsQR(new Uint8ClampedArray(png.data), png.width, png.height)?.data ?? null;
+}
 try {
   // 1. Visitors: the illustrated map, no 3D view, no editing controls.
   if (only.includes("visitor")) {
@@ -317,6 +328,276 @@ try {
     await phone.tab.screenshot({ path: join(shots, "05-guide-thai-phone.png") });
     check(phone.errors.length === 0, "no page errors in Thai on a phone", phone.errors.join(" | "));
     await phone.context.close();
+  }
+
+  // 1c. Soft launch: researched hours, phone layout, sharing, guests.
+  if (only.includes("launch")) {
+    const NEVER_STATUS = ["holy-rosary", "old-bank", "rong-kueak", "street-art-lane", "fieldwork-p01", "fieldwork-p02", "fieldwork-p04", "fieldwork-p05", "fieldwork-p07", "fieldwork-p08", "fieldwork-p09", "fieldwork-p10"];
+    const BRIEF = ["holy-rosary", "old-bank", "so-heng-tai", "rong-kueak", "street-art-lane", "chow-sue-kong", "fieldwork-p01", "fieldwork-p02", "fieldwork-p03", "fieldwork-p04", "fieldwork-p05", "fieldwork-p07", "fieldwork-p08", "fieldwork-p09", "fieldwork-p10"];
+    const briefPlaces = seed.places.filter((place) => BRIEF.includes(place.id));
+    check(briefPlaces.length === 15 && briefPlaces.every((place) => place.hoursStatus && (place.hoursNoteEn || place.hoursLabelEn) && place.hoursNoteTh && place.hoursReviewedOn === "2026-11-11"), "all 15 places have an hours or access note in English and Thai, reviewed 11 Nov 2026");
+    check(briefPlaces.filter((place) => place.id !== "fieldwork-p02").every((place) => place.hoursSources.length > 0), "every place with a listing keeps its hours sources (the unnamed cart has none)");
+    check(seed.places.filter((place) => ["published", "listed"].includes(place.hoursStatus)).map((place) => place.id).sort().join() === ["32bar-x-chocolate", "chow-sue-kong", "fieldwork-p03", "so-heng-tai"].sort().join(), "only Chow Sue Kong, Khun Pu, So Heng Tai (listed) and 32Bar X carry an Open/Closed schedule");
+
+    // Status at fixed Bangkok times, seen from a device set to Los Angeles time.
+    const statusAt = async (time) => {
+      const { context, tab, errors } = await openPage(browser, { role: "viewer", fresh: true, time, options: { timezoneId: "America/Los_Angeles" } });
+      await tab.locator(".list-toggle").click();
+      const chips = await tab.evaluate(() =>
+        Object.fromEntries([...document.querySelectorAll(".stop[data-place-id]")].map((row) => [row.dataset.placeId, row.querySelector("[data-testid=hours-chip]")?.textContent ?? ""])),
+      );
+      return { context, tab, errors, chips };
+    };
+    const times = {
+      "Sun 10:00": "2026-11-15T03:00:00Z",
+      "Mon 11:00": "2026-11-16T04:00:00Z",
+      "Thu 05:30": "2026-11-11T22:30:00Z",
+      "Thu 07:30": "2026-11-12T00:30:00Z",
+      "Thu 10:00": "2026-11-12T03:00:00Z",
+      "Thu 16:30": "2026-11-12T09:30:00Z",
+    };
+    const seen = {};
+    for (const [label, time] of Object.entries(times)) {
+      const run = await statusAt(time);
+      seen[label] = run.chips;
+      if (label !== "Thu 10:00") await run.context.close();
+      else seen.page = run;
+    }
+    check(seen["Sun 10:00"]["fieldwork-p03"] === "Closed by schedule", "Khun Pu on a Sunday: Closed by schedule", seen["Sun 10:00"]["fieldwork-p03"]);
+    check(seen["Sun 10:00"]["chow-sue-kong"] === "Open by schedule", "Chow Sue Kong on a Sunday morning: open for worship (office hours do not count)");
+    check(seen["Mon 11:00"]["so-heng-tai"] === "Closed by schedule", "So Heng Tai on a Monday: Closed by schedule", seen["Mon 11:00"]["so-heng-tai"]);
+    check(seen["Thu 05:30"]["chow-sue-kong"] === "Closed by schedule" && seen["Thu 10:00"]["chow-sue-kong"] === "Open by schedule" && seen["Thu 16:30"]["chow-sue-kong"] === "Closed by schedule", "Chow Sue Kong before opening, during and after closing");
+    check(seen["Thu 07:30"]["fieldwork-p03"] === "Open by schedule", "Bangkok time is used on a device in another time zone (Thu 07:30 Bangkok is Wed 16:30 in Los Angeles)");
+    const falseStatus = Object.entries(seen).filter(([key]) => key !== "page").flatMap(([label, chips]) => NEVER_STATUS.filter((id) => /by schedule/.test(chips[id] ?? "")).map((id) => `${label} ${id}`));
+    check(falseStatus.length === 0, "Mother Roaster, Rong Kueak, Soraya, the barber, the church and unverified or outdoor stops never show Open or Closed", falseStatus.join(", "));
+
+    // Card details: Mass and office kept separate; disagreements shown as listings.
+    {
+      const { context, tab, errors } = seen.page;
+      await tab.locator(".map-marker[data-place-id=holy-rosary]").click();
+      await tab.waitForSelector('[data-testid=place-card][data-place-id="holy-rosary"]');
+      check((await tab.locator("[data-testid=hours-badge]").innerText()) === "Check before going", "Holy Rosary Church shows Check before going");
+      await tab.locator("[data-testid=today-hours] summary").click();
+      check((await tab.locator("[data-testid=other-times]").innerText()).includes("Mass") && (await tab.locator("[data-testid=hours-reports] li").count()) === 2, "Mass times and the two visiting listings appear separately in the hours detail");
+      await tab.locator("[data-testid=place-card] .panel-close").click();
+      await tab.locator(".map-marker[data-place-id=chow-sue-kong]").click();
+      await tab.waitForSelector('[data-testid=place-card][data-place-id="chow-sue-kong"]');
+      await tab.locator("[data-testid=today-hours] summary").click();
+      check(
+        (await tab.locator("[data-testid=hours-badge]").innerText()) === "Open by schedule" &&
+          (await tab.locator("[data-testid=today-hours-time]").innerText()).includes("06:00–16:00") &&
+          (await tab.locator("[data-testid=other-times]").innerText()).toLowerCase().includes("office"),
+        "Chow Sue Kong shows today’s worship hours with the office hours kept apart",
+      );
+      await tab.screenshot({ path: join(shots, "06-hours-detail.png") });
+      check(errors.length === 0, "no page errors in the hours views", errors.join(" | "));
+      await context.close();
+    }
+
+    // Special date and an overnight close, set in the editor and seen in Preview.
+    {
+      const { context, tab, errors } = await openPage(browser, { role: "editor", fresh: true, time: times["Thu 10:00"], options: { timezoneId: "Asia/Bangkok" } });
+      await enterEditor(tab);
+      await tab.locator('.stop[data-place-id="fieldwork-p03"]').click();
+      await tab.waitForSelector("[data-testid=place-panel]");
+      await tab.locator("[data-testid=hours-section] > summary").click();
+      await tab.locator("[data-testid=hours-section] button", { hasText: "Add date" }).click();
+      const row = tab.locator("[data-testid=hours-section] .ed-rows").filter({ hasText: "Special dates" }).locator(".ed-row").first();
+      await row.locator("input").nth(0).fill("2026-11-12");
+      await row.locator("input").nth(1).fill("closed");
+      await row.locator("input").nth(2).fill("Family event");
+      await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
+      await tab.locator('.stop[data-place-id="fieldwork-p05"]').click();
+      await tab.waitForSelector("[data-testid=place-panel]");
+      await tab.locator("[data-testid=hours-section] > summary").click();
+      await tab.getByRole("combobox", { name: "Hours status" }).click();
+      await tab.getByRole("option", { name: /^Published schedule/ }).click();
+      await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
+      await tab.click("[data-testid=tool-preview]");
+      await tab.waitForSelector("[data-testid=preview-banner]");
+      await marker(tab, "fieldwork-p03").click();
+      await tab.waitForSelector('[data-testid=place-card][data-place-id="fieldwork-p03"]');
+      await tab.locator("[data-testid=today-hours] summary").click();
+      check(
+        (await tab.locator("[data-testid=hours-badge]").innerText()) === "Closed by schedule" && (await tab.locator("[data-testid=today-hours]").innerText()).includes("Family event"),
+        "a special date overrides the weekly schedule (Khun Pu closed on a Thursday)",
+      );
+      await tab.locator("[data-testid=place-card] .panel-close").click();
+      await tab.clock.setFixedTime(new Date("2026-11-13T17:30:00Z")); // Sat 00:30 Bangkok
+      await marker(tab, "fieldwork-p05").click();
+      await tab.waitForSelector('[data-testid=place-card][data-place-id="fieldwork-p05"]');
+      const overnight = await tab.locator("[data-testid=hours-badge]").innerText();
+      await tab.locator("[data-testid=place-card] .panel-close").click();
+      await tab.clock.setFixedTime(new Date("2026-11-13T18:30:00Z")); // Sat 01:30 Bangkok
+      await marker(tab, "fieldwork-p05").click();
+      await tab.waitForSelector('[data-testid=place-card][data-place-id="fieldwork-p05"]');
+      const afterOvernight = await tab.locator("[data-testid=hours-badge]").innerText();
+      check(overnight === "Open by schedule" && afterOvernight === "Closed by schedule", "a Friday close at 01:00 runs past midnight once confirmed (open 00:30, closed 01:30 Saturday)", `${overnight} / ${afterOvernight}`);
+      check(errors.length === 0, "no page errors while editing hours", errors.join(" | "));
+      await context.close();
+    }
+
+    // Phone widths and landscape: no sideways scroll, comfortable controls.
+    for (const [label, device, viewport] of [
+      ["360 px", "Pixel 7", { width: 360, height: 780 }],
+      ["390 px", "iPhone 13", { width: 390, height: 844 }],
+      ["430 px", "iPhone 13", { width: 430, height: 932 }],
+      ["landscape", "iPhone 13", { width: 844, height: 390 }],
+    ]) {
+      const { context, tab, errors } = await openPage(browser, { role: "viewer", device, fresh: true, options: { viewport } });
+      const overflow = await tab.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+      const small = await tab.evaluate(() =>
+        [...document.querySelectorAll("[data-testid=filter-button], [data-testid=share-map], .language-button, .menu-button, .dock-toggle button, .dock-walk, .zoom-controls button")]
+          .filter((el) => el.offsetParent)
+          .filter((el) => {
+            const box = el.getBoundingClientRect();
+            return box.height < 43.5 || box.width < 43.5;
+          })
+          .map((el) => el.dataset.testid || el.className || el.textContent),
+      );
+      const labels = await tab.locator(".map-marker:not(.is-selected) .pin-label").evaluateAll((els) => els.filter((el) => el.offsetParent).length);
+      await tab.locator(".map-marker[data-place-id=fieldwork-p09]").tap();
+      await tab.waitForSelector("[data-testid=place-card]");
+      await tab.waitForTimeout(400);
+      const actions = await tab.locator("[data-testid=place-card] .panel-actions").boundingBox();
+      const closeBox = await tab.locator("[data-testid=place-card] .panel-close").boundingBox();
+      check(
+        overflow <= 0 && small.length === 0 && labels === 0 && actions.y + actions.height <= viewport.height + 1 && closeBox.y >= 0,
+        `${label}: no sideways scroll, 44 px controls, only the selected pin labelled, card actions and close visible`,
+        `overflow ${overflow}, small ${small.join(",")}, labels ${labels}`,
+      );
+      await tab.screenshot({ path: join(shots, `07-phone-${label.replace(" ", "")}.png`) });
+      check(errors.length === 0, `${label}: no page errors`, errors.join(" | "));
+      await context.close();
+    }
+
+    // The full phone path: open, search, tap, hours, story, back to the same map, filter, share.
+    {
+      const shared = [];
+      const { context, tab, errors } = await openPage(browser, {
+        role: "viewer",
+        device: "iPhone 13",
+        fresh: true,
+        time: times["Thu 10:00"],
+        options: { timezoneId: "Asia/Bangkok", permissions: ["clipboard-read", "clipboard-write"] },
+        init: () => {
+          window.__shared = [];
+          navigator.share = async (data) => void window.__shared.push(data);
+        },
+      });
+      check(await tab.locator("[data-testid=welcome]").isVisible(), "the landing view shows the short welcome line");
+      await tab.locator("[data-testid=welcome-dismiss]").tap();
+      await tab.locator(".zoom-controls button[aria-label='Zoom in']").tap();
+      await tab.waitForTimeout(300);
+      const zoom = await tab.locator(".map-gesture-hint span").textContent();
+      await tab.locator(".search-field input").fill("กะหรี่ปั๊บ");
+      await tab.waitForTimeout(200);
+      check((await tab.locator(".stop[data-place-id]").count()) === 1 && (await tab.locator('.stop[data-place-id="fieldwork-p03"]').count()) === 1, "Thai search finds Khun Pu’s Curry Puffs");
+      await tab.locator('.stop[data-place-id="fieldwork-p03"]').tap();
+      await tab.waitForSelector("[data-testid=place-card]");
+      check((await tab.locator("[data-testid=hours-badge]").innerText()) === "Open by schedule" && (await tab.locator("[data-testid=today-hours-time]").innerText()).includes("07:00–14:00"), "the card shows today’s hours under the name");
+      await tab.locator("[data-testid=read-story-action]").tap();
+      await tab.waitForTimeout(600);
+      check(await tab.locator("[data-testid=read-story]").evaluate((el) => el.open), "Read the story opens the story from the sheet’s main button");
+      await tab.locator("[data-testid=place-card] .panel-close").tap();
+      await tab.locator("[data-testid=dock-map]").tap();
+      await tab.waitForTimeout(300);
+      check(
+        (await tab.locator(".search-field input").inputValue()) === "กะหรี่ปั๊บ" &&
+          (await tab.locator(".map-gesture-hint span").textContent()) === zoom &&
+          (await tab.locator('.map-marker.is-selected[data-place-id="fieldwork-p03"]').count()) === 1,
+        "back on the map: same search, zoom and selected pin",
+      );
+      await tab.locator(".search-field button[aria-label='Clear search']").tap();
+      await tab.locator("[data-testid=dock-list]").tap();
+      await tab.locator("[data-testid=dock-map]").tap();
+      check((await tab.locator(".map-gesture-hint span").textContent()) === zoom, "switching Map and List keeps the map camera");
+      await tab.locator("[data-testid=filter-button]").tap();
+      await tab.locator('[data-filter-category="Food & drink"]').tap();
+      await tab.locator("[data-testid=filter-done]").tap();
+      await tab.waitForTimeout(300);
+      check(await tab.locator("[data-testid=active-filters]").isVisible(), "an active filter shows a visible reset");
+      await tab.locator("[data-testid=reset-filters]").tap();
+      check((await tab.locator("[data-testid=active-filters]").count()) === 0 && (await tab.locator(".map-marker[data-place-id]").count()) === seed.places.length, "Reset filters brings every place back");
+      check((await tab.locator("[data-testid=open-now]").isVisible()) === false && (await tab.locator(".map-marker[data-place-id=fieldwork-p08]").count()) === 1, "no Open now filter is on by default; outdoor art stays on the map");
+
+      await tab.locator("[data-testid=share-map]").tap();
+      await tab.waitForSelector("[data-testid=share-sheet]");
+      await tab.waitForTimeout(400);
+      check((await tab.locator("[data-testid=share-link]").inputValue()) === SHARE_URL.replace(/^https:\/\//, "").replace(/#.*$/, ""), "the readable link is shown beside the QR");
+      check((await decodeQr(tab.locator("[data-testid=share-qr]"))) === SHARE_URL, "the QR code decodes to the share link", SHARE_URL);
+      await tab.locator("[data-testid=share-copy]").tap();
+      await tab.waitForTimeout(200);
+      check((await tab.evaluate(() => navigator.clipboard.readText())) === SHARE_URL, "Copy link copies the visitor link");
+      await tab.locator("[data-testid=share-native]").tap();
+      await tab.waitForTimeout(200);
+      const native = await tab.evaluate(() => window.__shared);
+      check(native.length === 1 && native[0].url === SHARE_URL, "the phone share sheet receives the same link");
+      const [download] = await Promise.all([tab.waitForEvent("download"), tab.locator("[data-testid=share-download]").tap()]);
+      const qrFile = join(shots, "share-qr.png");
+      await download.saveAs(qrFile);
+      const qrPng = PNG.sync.read(readFileSync(qrFile));
+      const decoded = jsQR(new Uint8ClampedArray(qrPng.data), qrPng.width, qrPng.height)?.data;
+      check(qrPng.width >= 1000 && decoded === SHARE_URL && download.suggestedFilename() === "talat-noi-map-qr.png", "Download QR gives a printable PNG of the same link", `${qrPng.width} px`);
+      await tab.screenshot({ path: join(shots, "08-share.png") });
+      check(errors.length === 0, "no page errors on the phone path", errors.join(" | "));
+      await context.close();
+    }
+
+    // Slow and failed map image, and a missing photo.
+    {
+      const context = await browser.newContext({ ...devices["iPhone 13"] });
+      await context.addInitScript(installFakeRuntime, { role: "viewer" });
+      let release;
+      const gate = new Promise((resolve) => (release = resolve));
+      await context.route("**/assets/talat-noi-full-3d-map.webp", async (route) => (await gate, route.continue()));
+      const tab = await context.newPage();
+      await tab.goto(base, { waitUntil: "domcontentloaded" });
+      await tab.waitForSelector(".map-marker[data-place-id]");
+      check((await tab.locator("[data-testid=map-loading]").innerText()).includes("Loading"), "a slow illustration shows a loading message while pins stay usable");
+      release();
+      await tab.waitForSelector("[data-testid=map-loading]", { state: "detached", timeout: 10000 });
+      check(true, "the loading message goes once the illustration arrives");
+      await context.close();
+
+      const broken = await browser.newContext({ ...devices["iPhone 13"] });
+      await broken.addInitScript(installFakeRuntime, { role: "viewer" });
+      await broken.route("**/assets/talat-noi-full-3d-map.webp", (route) => route.abort());
+      await broken.route(/20261104_154919\.(jpg|webp)/, (route) => route.abort());
+      const page2 = await broken.newPage();
+      await page2.goto(base, { waitUntil: "networkidle" });
+      await page2.waitForSelector("[data-testid=map-loading].is-error");
+      await page2.locator("[data-testid=map-loading] button", { hasText: "Open the list" }).tap();
+      await page2.waitForTimeout(300);
+      check(await page2.locator('.stop[data-place-id="fieldwork-p03"]').isVisible(), "if the illustration fails, the list still works");
+      await page2.locator('.stop[data-place-id="fieldwork-p03"]').tap();
+      await page2.waitForSelector("[data-testid=place-card]");
+      check((await page2.locator("[data-testid=place-card] .card-photo").innerText()).includes("Photo unavailable") && (await page2.locator("[data-testid=today-hours]").isVisible()), "a missing photo shows a placeholder and the card still has its hours");
+      await page2.screenshot({ path: join(shots, "09-map-failed.png") });
+      await broken.close();
+    }
+
+    // A guest without a claude.ai account: the read-only built-in edition.
+    {
+      const { context, tab, errors } = await openPage(browser, { guest: true, fresh: true, device: "iPhone 13", url: base.replace("127.0.0.1", "guest.test") });
+      check((await tab.locator("[data-testid=edit-map]").count()) === 0, "guests get the read-only map");
+      await tab.locator(".map-marker[data-place-id=chow-sue-kong]").tap();
+      await tab.waitForSelector("[data-testid=place-card]");
+      const photoOk = await tab.locator("[data-testid=place-card] img.place-photo").evaluate((img) => img.complete && img.naturalWidth > 0);
+      await tab.locator("[data-testid=today-hours] summary").tap();
+      check(photoOk && (await tab.locator("[data-testid=today-hours] .hours-sources a").count()) === 3, "guests see photos, hours and their sources");
+      await tab.locator("[data-testid=place-card] .panel-close").tap();
+      await tab.locator("[data-testid=dock-walk]").tap();
+      check(await tab.locator("[data-testid=walk-guide]").isVisible(), "guests can open Plan your walk");
+      await tab.locator('[data-walk-stop="holy-rosary"]').tap();
+      await tab.waitForSelector("[data-testid=walk-strip]");
+      check((await tab.locator("[data-testid=walk-next]").innerText()).includes("Old Commercial Quarter") && (await tab.locator("[data-testid=place-card] .walking-button").count()) === 0, "a walk stop offers the next stop and nearby alternatives, but no directions to an unconfirmed spot");
+      await tab.locator("[data-testid=walk-next]").tap();
+      await tab.waitForSelector('[data-testid=place-card][data-place-id="old-bank"]');
+      check(true, "Next stop opens the next place in the chapter");
+      check(errors.length === 0, "no page errors for guests", errors.join(" | "));
+      await context.close();
+    }
   }
 
   // 2. Editor on desktop.

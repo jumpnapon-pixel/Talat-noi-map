@@ -113,6 +113,18 @@ function TalatNoiApp({ storePromise }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
   const [explorerTab, setExplorerTab] = useState("places"); // visitors: "places" | "walk"
+  const [openNow, setOpenNow] = useState(false); // optional "Open by schedule now" filter, never on by default
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [walkChapter, setWalkChapter] = useState(null); // chapter id when a stop was opened from Plan your walk
+  const [baseMap, setBaseMap] = useState({ src: "", state: "loading", attempt: 0 });
+  const [welcome, setWelcome] = useState(() => {
+    try {
+      return localStorage.getItem("talat-noi-welcome-dismissed") !== "1";
+    } catch {
+      return true;
+    }
+  });
   const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 });
   const [isMobile, setIsMobile] = useState(false);
   const [workspace, setWorkspace] = useState("places"); // "places" | "photos"
@@ -147,6 +159,7 @@ function TalatNoiApp({ storePromise }) {
     (place) =>
       (flatPlacing?.kind === "move" && flatPlacing.id === place.id) ||
       ((category === "All" || place.category === category) &&
+        (!openNow || scheduleState(place).kind === "open") &&
         searchText(place).includes(query.trim().toLowerCase())),
   );
   const dirty = (editing || previewing) && savedJson !== null && JSON.stringify(doc) !== savedJson;
@@ -162,6 +175,34 @@ function TalatNoiApp({ storePromise }) {
   const busy = openingEditor || publishing || saveView.state === "saving";
   const placing = !!flatPlacing;
   const walkMode = !editing && explorerTab === "walk";
+  const filtersActive = category !== "All" || openNow;
+  const walkInfo = (() => {
+    const chapter = walkChapter && WALK.chapters.find((item) => item.id === walkChapter);
+    if (!chapter || !selected || editing) return null;
+    const exists = (id) => places.some((place) => place.id === id);
+    const pool = [...chapter.stops, ...chapter.also].filter(exists);
+    if (!pool.includes(selected.id)) return null;
+    const index = chapter.stops.indexOf(selected.id);
+    const nextId = index >= 0 ? chapter.stops.slice(index + 1).find(exists) : chapter.stops.find(exists);
+    return {
+      chapter,
+      number: WALK.chapters.indexOf(chapter) + 1,
+      index,
+      total: chapter.stops.filter(exists).length,
+      next: places.find((place) => place.id === nextId) ?? null,
+      alternatives: pool
+        .filter((id) => id !== selected.id && id !== nextId)
+        .slice(0, 3)
+        .map((id) => places.find((place) => place.id === id)),
+    };
+  })();
+  const resetFilters = () => (setCategory("All"), setOpenNow(false));
+  const dismissWelcome = () => {
+    setWelcome(false);
+    try {
+      localStorage.setItem("talat-noi-welcome-dismissed", "1");
+    } catch {}
+  };
   const queuePhoto = FIELDWORK_PHOTOS.find((photo) => photo.id === queuePhotoId) ?? null;
   const queue = fieldworkQueue(doc.places);
   const queuedCount = queue.filter((item) => !item.place).length;
@@ -278,7 +319,7 @@ function TalatNoiApp({ storePromise }) {
   }, [published.places, mode]);
 
   // ----- Selection -----------------------------------------------------------------------
-  const selectPlace = (id) => {
+  const selectPlace = (id, { fromWalk = null } = {}) => {
     if (pickToMove && editing) {
       setPickToMove(false);
       startMove(id);
@@ -287,6 +328,7 @@ function TalatNoiApp({ storePromise }) {
     setSelectedId(id);
     setCardOpen(true);
     setNavPlacing(null);
+    setWalkChapter(fromWalk);
   };
   const closeCard = useCallback(() => {
     setCardOpen(false);
@@ -767,10 +809,35 @@ function TalatNoiApp({ storePromise }) {
             </button>
           )}
         </label>
+        {!editing && (
+          <button
+            className={`filter-button ${filtersActive ? "is-active" : ""}`}
+            onClick={() => setFilterOpen(true)}
+            aria-label={filtersActive ? tr("Filters on: change filters", "เปิดตัวกรองอยู่: เปลี่ยนตัวกรอง") : tr("Filter places", "กรองสถานที่")}
+            data-testid="filter-button"
+          >
+            <Icon.Filter size={18} />
+            <span>{tr("Filter", "ตัวกรอง")}</span>
+            {filtersActive && <span className="filter-count">{(category !== "All") + openNow}</span>}
+          </button>
+        )}
         <div className="top-actions">
           {mode === "visitor" && permissions.canEdit && (
             <Button className="edit-map-button" onClick={enterEditor} disabled={openingEditor} data-testid="edit-map">
-              {openingEditor ? <Icon.Loader className="ed-spin" /> : <Icon.Pencil />} Edit map
+              {openingEditor ? <Icon.Loader className="ed-spin" /> : <Icon.Pencil />}
+              <span className="edit-map-label">Edit map</span>
+            </Button>
+          )}
+          {!editing && (
+            <Button
+              variant="ghost"
+              className="share-button"
+              onClick={() => setShareOpen(true)}
+              aria-label={tr("Share map", "แชร์แผนที่")}
+              data-testid="share-map"
+            >
+              <Icon.Share size={18} />
+              <span>{tr("Share map", "แชร์แผนที่")}</span>
             </Button>
           )}
           <Button
@@ -906,10 +973,38 @@ function TalatNoiApp({ storePromise }) {
                 </button>
               );
             })}
+            {!editing && (
+              <button
+                className={`open-now-chip ${openNow ? "active" : ""}`}
+                aria-pressed={openNow}
+                onClick={() => setOpenNow(!openNow)}
+                data-testid="open-now"
+              >
+                <Icon.Clock size={15} />
+                {tHours(lang, "openNow")}
+              </button>
+            )}
+            {!editing && filtersActive && (
+              <button className="reset-chip" onClick={resetFilters} data-testid="reset-chip">
+                <Icon.X size={14} />
+                {tr("Reset", "ล้าง")}
+              </button>
+            )}
           </div>
         )}
         <div className="view-switch">{viewSwitch}</div>
       </div>
+
+      {!editing && filtersActive && (
+        <div className="active-filters" role="status" data-testid="active-filters">
+          <span>
+            {[category !== "All" && categoryLabel(category, lang), openNow && tHours(lang, "openNow")].filter(Boolean).join(" · ")}
+          </span>
+          <button onClick={resetFilters} data-testid="reset-filters">
+            {tr("Reset filters", "ล้างตัวกรอง")}
+          </button>
+        </div>
+      )}
 
       <div className="workspace" data-list={listOpen ? "open" : "closed"}>
         <aside className="explorer" id="place-list" aria-label={tr("Places", "สถานที่")}>
@@ -955,7 +1050,12 @@ function TalatNoiApp({ storePromise }) {
           {editing && workspace === "photos" ? (
             <PhotoQueueList places={doc.places} selectedId={queuePhotoId} onOpen={(id) => (setQueueError(""), setQueuePhotoId(id))} />
           ) : walkMode ? (
-            <WalkGuide places={places} lang={lang} selectedId={cardOpen ? selectedId : null} onOpen={(id) => selectPlace(id)} />
+            <WalkGuide
+              places={places}
+              lang={lang}
+              selectedId={cardOpen ? selectedId : null}
+              onOpen={(id, chapterId) => selectPlace(id, { fromWalk: chapterId })}
+            />
           ) : (
             <div className="stop-list" data-testid="place-list">
               {visiblePlaces.map((place) => {
@@ -989,6 +1089,7 @@ function TalatNoiApp({ storePromise }) {
                               {tGuide(lang, label.text)}
                             </span>
                           ))}
+                          <HoursChip place={place} lang={lang} />
                         </span>
                       )}
                     </span>
@@ -1055,7 +1156,7 @@ function TalatNoiApp({ storePromise }) {
             </p>
           )}
           <div
-            className={`map-viewport ${flatPlacing ? "placing" : ""}`}
+            className={`map-viewport ${flatPlacing ? "placing" : ""} ${panZoom.zoom >= 1.75 ? "show-labels" : ""}`}
             ref={viewportRef}
             style={view === "street" ? { display: "none" } : undefined}
             tabIndex={0}
@@ -1065,10 +1166,13 @@ function TalatNoiApp({ storePromise }) {
           >
             <div className="map-canvas" ref={canvasRef} onClick={handleFlatMapClick}>
               <img
+                key={`${view}-${baseMap.attempt}`}
                 className="base-map"
                 src={view === "digital" ? "assets/talat-noi-full-3d-map.webp" : "assets/talat-noi-map.webp"}
                 alt="Illustrated Talat Noi neighbourhood. Marker positions are schematic and need verification."
                 draggable={false}
+                onLoad={() => setBaseMap((current) => ({ ...current, src: view, state: "ready" }))}
+                onError={() => setBaseMap((current) => ({ ...current, src: view, state: "error" }))}
               />
               {visiblePlaces.map((place) => {
                 const offset = spread.get(place.id) ?? { dx: 0, dy: 0 };
@@ -1124,6 +1228,69 @@ function TalatNoiApp({ storePromise }) {
               )}
             </div>
           </div>
+          {(view === "digital" || view === "original") && (baseMap.src !== view || baseMap.state !== "ready") && (
+            <div className={`map-loading is-${baseMap.src === view ? baseMap.state : "loading"}`} role="status" data-testid="map-loading">
+              {baseMap.src === view && baseMap.state === "error" ? (
+                <>
+                  <p>
+                    {tr(
+                      "The illustrated map didn’t load. Places, hours and stories are still in the list.",
+                      "โหลดแผนที่ภาพประกอบไม่สำเร็จ แต่ยังดูสถานที่ เวลาเปิด และเรื่องราวได้ในรายการ",
+                    )}
+                  </p>
+                  <div>
+                    <Button size="sm" onClick={() => (setExplorerTab("places"), setListOpen(true))}>
+                      {tr("Open the list", "เปิดรายการ")}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setBaseMap((current) => ({ ...current, state: "loading", attempt: current.attempt + 1 }))}>
+                      {tr("Try again", "ลองอีกครั้ง")}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p>
+                  <span className="scene-loader" />
+                  {tr("Loading the illustrated map…", "กำลังโหลดแผนที่ภาพประกอบ…")}
+                </p>
+              )}
+            </div>
+          )}
+          {!editing && welcome && !cardOpen && !(listOpen && isMobile) && (
+            <div className="welcome-card" role="note" data-testid="welcome">
+              <p>{tr("Pick a place to visit, check today’s hours, and take Talat Noi one lane at a time.", "เลือกจุดที่อยากแวะ เช็กเวลาเปิดวันนี้ แล้วค่อย ๆ เดินเที่ยวตลาดน้อยทีละตรอก")}</p>
+              <button aria-label={tr("Dismiss welcome", "ปิดข้อความต้อนรับ")} onClick={dismissWelcome} data-testid="welcome-dismiss">
+                <Icon.X size={16} />
+              </button>
+            </div>
+          )}
+          {!editing && (
+            <div className="phone-dock" data-testid="phone-dock">
+              <div className="dock-toggle" role="group" aria-label={tr("Map or list", "แผนที่หรือรายการ")}>
+                <button aria-pressed={!listOpen} onClick={() => setListOpen(false)} data-testid="dock-map">
+                  <Icon.Map size={17} />
+                  {tr("Map", "แผนที่")}
+                </button>
+                <button
+                  aria-pressed={listOpen && !walkMode}
+                  onClick={() => (setExplorerTab("places"), setListOpen(true))}
+                  data-testid="dock-list"
+                >
+                  <Icon.List size={17} />
+                  {tr("List", "รายการ")}
+                  <span className="dock-count">{visiblePlaces.length}</span>
+                </button>
+              </div>
+              <button
+                className={`dock-walk ${walkMode && listOpen ? "active" : ""}`}
+                aria-pressed={walkMode && listOpen}
+                onClick={() => (walkMode && listOpen ? setListOpen(false) : (setExplorerTab("walk"), setListOpen(true)))}
+                data-testid="dock-walk"
+              >
+                <Icon.Walk size={17} />
+                {tr("Plan your walk", "วางแผนเดินเที่ยว")}
+              </button>
+            </div>
+          )}
           {view === "street" && (
             <GoogleStreetMap places={visiblePlaces} fix={location.usableFix} selectedId={selectedId} onSelect={(id) => selectPlace(id)} lang={lang} />
           )}
@@ -1258,6 +1425,8 @@ function TalatNoiApp({ storePromise }) {
         <GuidePlaceCard
           key={selected.id}
           place={selected}
+          walk={walkInfo}
+          onWalkSelect={(id) => selectPlace(id, { fromWalk: walkChapter })}
           places={places}
           fix={location.usableFix}
           lang={lang}
@@ -1293,6 +1462,66 @@ function TalatNoiApp({ storePromise }) {
           </SheetContent>
         </Sheet>
       )}
+
+      {!editing && (
+        <Sheet open={filterOpen} onOpenChange={setFilterOpen}>
+          <SheetContent side="bottom" showCloseButton={false} className="filter-sheet" data-testid="filter-sheet">
+            <div className="sheet-close">
+              <Button variant="outline" size="icon" aria-label={tr("Close filters", "ปิดตัวกรอง")} onClick={() => setFilterOpen(false)}>
+                <Icon.X />
+              </Button>
+            </div>
+            <SheetTitle>{tr("Filter places", "กรองสถานที่")}</SheetTitle>
+            <SheetDescription>
+              {tr(
+                "Outdoor stops and places without confirmed hours stay on the map unless you turn on the hours filter.",
+                "จุดชมกลางแจ้งและสถานที่ที่ยังไม่ยืนยันเวลา จะยังแสดงบนแผนที่ เว้นแต่จะเปิดตัวกรองเวลา",
+              )}
+            </SheetDescription>
+            <div className="filter-sheet-chips" role="group" aria-label={tr("Category", "หมวดหมู่")}>
+              {["All", ...CATEGORIES.filter((item) => places.some((place) => place.category === item))].map((item) => {
+                const style = item === "All" ? null : CATEGORY_STYLE[item];
+                return (
+                  <button
+                    key={item}
+                    aria-pressed={category === item}
+                    className={category === item ? "active" : ""}
+                    style={style ? { "--chip-tint": style.tint, "--chip-text": style.text } : undefined}
+                    onClick={() => setCategory(item)}
+                    data-filter-category={item}
+                  >
+                    {item !== "All" && <CategoryIcon category={item} />}
+                    {item === "All" ? tr("All", "ทั้งหมด") : categoryLabel(item, lang)}
+                  </button>
+                );
+              })}
+            </div>
+            <Toggle
+              label={tHours(lang, "openNow")}
+              name="openNow"
+              checked={openNow}
+              hint={tr(
+                "Only places with a published schedule that is open now in Bangkok time.",
+                "เฉพาะสถานที่ที่มีเวลาเปิดตามประกาศและเปิดอยู่ตอนนี้ตามเวลากรุงเทพฯ",
+              )}
+              onChange={setOpenNow}
+            />
+            <div className="filter-sheet-views">
+              <span className="eyebrow">{tr("MAP VIEW", "มุมมองแผนที่")}</span>
+              <div className="view-switch">{viewSwitch}</div>
+            </div>
+            <div className="filter-sheet-actions">
+              <Button variant="outline" onClick={resetFilters} disabled={!filtersActive} data-testid="filter-reset">
+                {tr("Reset filters", "ล้างตัวกรอง")}
+              </Button>
+              <Button onClick={() => setFilterOpen(false)} data-testid="filter-done">
+                {tr(`Show ${visiblePlaces.length} ${visiblePlaces.length === 1 ? "place" : "places"}`, `ดู ${visiblePlaces.length} สถานที่`)}
+              </Button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
+      {!editing && <ShareSheet open={shareOpen} onOpenChange={setShareOpen} lang={lang} side={isMobile ? "bottom" : "right"} />}
 
       <Sheet open={navOpen} onOpenChange={(open) => (open ? setNavOpen(true) : (setNavOpen(false), setNavPlacing(null)))}>
         <SheetContent side={isMobile ? "bottom" : "right"} showCloseButton={false} className="navigation-sheet">

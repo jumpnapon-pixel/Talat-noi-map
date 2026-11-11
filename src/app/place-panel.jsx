@@ -17,6 +17,19 @@ const PLACE_DEFAULTS = {
   entranceNote: "",
   researchReviewedOn: "",
   editorNotes: "",
+  hoursStatus: "",
+  hoursScope: "",
+  weeklyHours: {},
+  hoursExceptions: [],
+  hoursLabelEn: "",
+  hoursLabelTh: "",
+  hoursNoteEn: "",
+  hoursNoteTh: "",
+  hoursReports: [],
+  otherTimes: [],
+  hoursSources: [],
+  hoursReviewedOn: "",
+  hoursEditorNotes: "",
 };
 
 function placeStatus(place, publishedPlace) {
@@ -234,6 +247,136 @@ function PlacePanel({
             value={place.editorNotes}
             hint="Only editors see this: matching notes, open questions, leads to check."
             onChange={set("editorNotes")}
+          />
+        </PanelSection>
+
+        <PanelSection
+          title="Opening hours"
+          description="Shown to visitors as Today’s hours. Bangkok time."
+          collapsible
+          defaultOpen={false}
+          testId="hours-section"
+        >
+          <SelectField
+            label="Hours status"
+            value={place.hoursStatus || "none"}
+            items={[
+              { value: "published", label: "Published schedule (can show Open/Closed by schedule)" },
+              { value: "listed", label: "Listed hours (can show Open/Closed by schedule)" },
+              { value: "check", label: "Check before going (sources disagree)" },
+              { value: "unknown", label: "Hours unknown" },
+              { value: "outdoor", label: "Outdoor stop (no opening hours)" },
+              { value: "area", label: "Area guide (no set hours)" },
+              { value: "none", label: "Not set" },
+            ]}
+            onChange={(value) => onChange({ hoursStatus: value === "none" ? "" : value }, null)}
+          />
+          <SelectField
+            label="What the schedule covers"
+            value={place.hoursScope || "none"}
+            items={[
+              { value: "visitor", label: "Visitor access" },
+              { value: "worship", label: "Worship area" },
+              { value: "shop", label: "Shop" },
+              { value: "office", label: "Office" },
+              { value: "delivery", label: "Delivery" },
+              { value: "event", label: "Special event" },
+              { value: "none", label: "Not set" },
+            ]}
+            onChange={(value) => onChange({ hoursScope: value === "none" ? "" : value }, null)}
+          />
+          <div className="ed-week" data-testid="weekly-hours">
+            <span className="ed-label">Weekly schedule</span>
+            <small className="ed-hint">
+              09:00-18:00, several ranges with commas, “closed”, or empty for not listed. A close before the open means the
+              next day (12:30-01:00).
+            </small>
+            {DAY_KEYS.map((day) => (
+              <label key={day} className="ed-week-row">
+                <span>{DAY_NAMES.en[day]}</span>
+                <input
+                  name={`weekly-${day}`}
+                  value={(place.weeklyHours ?? {})[day] ?? ""}
+                  placeholder="not listed"
+                  onChange={(event) =>
+                    onChange({ weeklyHours: { ...(place.weeklyHours ?? {}), [day]: event.target.value } }, `${place.id}:weekly-${day}`)
+                  }
+                />
+              </label>
+            ))}
+            {issues.weeklyHours && <p className="ed-error">{issues.weeklyHours}</p>}
+          </div>
+          <div className="ed-field-pair">
+            <TextField label="Visit label (English)" name="hoursLabelEn" maxLength={160} value={place.hoursLabelEn} onChange={set("hoursLabelEn")} />
+            <TextField label="Visit label (Thai)" name="hoursLabelTh" lang="th" maxLength={160} value={place.hoursLabelTh} onChange={set("hoursLabelTh")} />
+          </div>
+          <TextField label="Public hours note (English)" name="hoursNoteEn" multiline rows={2} maxLength={600} value={place.hoursNoteEn} onChange={set("hoursNoteEn")} />
+          <TextField label="Public hours note (Thai)" name="hoursNoteTh" lang="th" multiline rows={2} maxLength={600} value={place.hoursNoteTh} onChange={set("hoursNoteTh")} />
+          <RowsField
+            label="Other published listings"
+            hint="Shown as indicative, never used for Open/Closed."
+            value={place.hoursReports}
+            fields={[
+              { key: "source", label: "Listing" },
+              { key: "url", label: "https://", maxLength: 1500 },
+              { key: "text", label: "Hours (English)" },
+              { key: "textTh", label: "Hours (Thai)", lang: "th" },
+            ]}
+            addLabel="Add listing"
+            error={issues.hoursReports}
+            onChange={(value) => onChange({ hoursReports: value }, `${place.id}:hoursReports`)}
+          />
+          <RowsField
+            label="Service or office times"
+            hint="Mass, office hours and similar. Kept separate from visiting status."
+            value={place.otherTimes}
+            max={6}
+            fields={[
+              { key: "labelEn", label: "Label (English)" },
+              { key: "labelTh", label: "Label (Thai)", lang: "th" },
+              { key: "textEn", label: "Times (English)" },
+              { key: "textTh", label: "Times (Thai)", lang: "th" },
+            ]}
+            addLabel="Add times"
+            error={issues.otherTimes}
+            onChange={(value) => onChange({ otherTimes: value }, `${place.id}:otherTimes`)}
+          />
+          <RowsField
+            label="Special dates"
+            hint="Holidays or one-off changes: a date and its hours (or closed). They replace the weekly hours on that day."
+            value={place.hoursExceptions}
+            max={40}
+            fields={[
+              { key: "date", label: "Date", type: "date" },
+              { key: "hours", label: "09:00-18:00 or closed" },
+              { key: "noteEn", label: "Note (English)" },
+              { key: "noteTh", label: "Note (Thai)", lang: "th" },
+            ]}
+            addLabel="Add date"
+            error={issues.hoursExceptions}
+            onChange={(value) => onChange({ hoursExceptions: value }, `${place.id}:hoursExceptions`)}
+          />
+          <SourcesField
+            label="Hours sources"
+            value={place.hoursSources}
+            error={issues.hoursSources}
+            onChange={(value) => onChange({ hoursSources: value }, `${place.id}:hoursSources`)}
+          />
+          <DateField
+            label="Listings reviewed on"
+            name="hoursReviewedOn"
+            value={place.hoursReviewedOn}
+            onChange={(value) => onChange({ hoursReviewedOn: value }, null)}
+          />
+          <TextField
+            label="Hours notes for editors"
+            name="hoursEditorNotes"
+            multiline
+            rows={4}
+            maxLength={4000}
+            value={place.hoursEditorNotes}
+            hint="The raw comparison, calls to make and which source changed when you update a schedule."
+            onChange={set("hoursEditorNotes")}
           />
         </PanelSection>
 
