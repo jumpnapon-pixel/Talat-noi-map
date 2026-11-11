@@ -112,6 +112,7 @@ function TalatNoiApp({ storePromise }) {
   const [navOpen, setNavOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [listOpen, setListOpen] = useState(false);
+  const [explorerTab, setExplorerTab] = useState("places"); // visitors: "places" | "walk"
   const [canvasSize, setCanvasSize] = useState({ w: 0, h: 0 });
   const [isMobile, setIsMobile] = useState(false);
   const [workspace, setWorkspace] = useState("places"); // "places" | "photos"
@@ -146,7 +147,7 @@ function TalatNoiApp({ storePromise }) {
     (place) =>
       (flatPlacing?.kind === "move" && flatPlacing.id === place.id) ||
       ((category === "All" || place.category === category) &&
-        `${place.nameEn} ${place.nameTh} ${place.category}`.toLowerCase().includes(query.toLowerCase())),
+        searchText(place).includes(query.trim().toLowerCase())),
   );
   const dirty = (editing || previewing) && savedJson !== null && JSON.stringify(doc) !== savedJson;
   const issues = useMemo(() => (editing ? collectIssues(doc.places) : null), [editing, doc.places]);
@@ -160,6 +161,7 @@ function TalatNoiApp({ storePromise }) {
           : { ...save, state: "saved" };
   const busy = openingEditor || publishing || saveView.state === "saving";
   const placing = !!flatPlacing;
+  const walkMode = !editing && explorerTab === "walk";
   const queuePhoto = FIELDWORK_PHOTOS.find((photo) => photo.id === queuePhotoId) ?? null;
   const queue = fieldworkQueue(doc.places);
   const queuedCount = queue.filter((item) => !item.place).length;
@@ -860,7 +862,12 @@ function TalatNoiApp({ storePromise }) {
       )}
 
       <div className="filter-bar">
-        <button className="list-toggle" aria-expanded={listOpen} aria-controls="place-list" onClick={() => setListOpen(!listOpen)}>
+        <button
+          className="list-toggle"
+          aria-expanded={listOpen && !walkMode}
+          aria-controls="place-list"
+          onClick={() => (listOpen && !walkMode ? setListOpen(false) : (setExplorerTab("places"), setListOpen(true)))}
+        >
           <Icon.List size={18} />
           {editing && workspace === "photos" ? (
             "Photo queue"
@@ -870,6 +877,18 @@ function TalatNoiApp({ storePromise }) {
             </>
           )}
         </button>
+        {!editing && (
+          <button
+            className={`walk-toggle ${walkMode && listOpen ? "active" : ""}`}
+            aria-expanded={walkMode && listOpen}
+            aria-controls="place-list"
+            onClick={() => (walkMode && listOpen ? setListOpen(false) : (setExplorerTab("walk"), setListOpen(true)))}
+            data-testid="plan-walk"
+          >
+            <Icon.Walk size={17} />
+            {tr("Plan your walk", "วางแผนเดินเที่ยว")}
+          </button>
+        )}
         {(!editing || workspace === "places") && (
           <div className="filter-row" aria-label="Categories">
             {["All", ...CATEGORIES.filter((item) => places.some((place) => place.category === item))].map((item) => {
@@ -895,20 +914,23 @@ function TalatNoiApp({ storePromise }) {
       <div className="workspace" data-list={listOpen ? "open" : "closed"}>
         <aside className="explorer" id="place-list" aria-label={tr("Places", "สถานที่")}>
           <div className="explorer-head">
-            <strong>
-              {editing && workspace === "photos" ? (
-                "Fieldwork photo queue"
-              ) : (
-                <>
-                  {visiblePlaces.length}{" "}
-                  {editing
-                    ? visiblePlaces.length === 1
-                      ? "place"
-                      : "places"
-                    : tr(visiblePlaces.length === 1 ? "place to discover" : "places to discover", "สถานที่")}
-                </>
-              )}
-            </strong>
+            {editing ? (
+              <strong>
+                {workspace === "photos"
+                  ? "Fieldwork photo queue"
+                  : `${visiblePlaces.length} ${visiblePlaces.length === 1 ? "place" : "places"}`}
+              </strong>
+            ) : (
+              <div className="explorer-tabs" role="tablist" aria-label={tr("Guide", "คู่มือ")}>
+                <button role="tab" aria-selected={!walkMode} onClick={() => setExplorerTab("places")} data-testid="places-tab">
+                  {visiblePlaces.length} {tr(visiblePlaces.length === 1 ? "place" : "places", "สถานที่")}
+                </button>
+                <button role="tab" aria-selected={walkMode} onClick={() => setExplorerTab("walk")} data-testid="walk-tab">
+                  <Icon.Walk size={15} />
+                  {tr("Plan your walk", "วางแผนเดินเที่ยว")}
+                </button>
+              </div>
+            )}
             {editing && workspace === "places" && (
               <Button size="sm" onClick={() => startAddPin()} disabled={busy || placing} data-testid="list-add-pin">
                 <Icon.PinPlus /> Add pin
@@ -932,6 +954,8 @@ function TalatNoiApp({ storePromise }) {
           )}
           {editing && workspace === "photos" ? (
             <PhotoQueueList places={doc.places} selectedId={queuePhotoId} onOpen={(id) => (setQueueError(""), setQueuePhotoId(id))} />
+          ) : walkMode ? (
+            <WalkGuide places={places} lang={lang} selectedId={cardOpen ? selectedId : null} onOpen={(id) => selectPlace(id)} />
           ) : (
             <div className="stop-list" data-testid="place-list">
               {visiblePlaces.map((place) => {
@@ -959,8 +983,12 @@ function TalatNoiApp({ storePromise }) {
                           {placeIssues ? "Needs a fix before saving" : !place.approved ? "Hidden from visitors" : status.label}
                         </span>
                       ) : (
-                        <span className={place.verification === "checked" ? "ready-label" : "review-label"}>
-                          {place.verification === "checked" ? tr("Checked", "ตรวจสอบแล้ว") : tr("Needs verification", "รอการตรวจสอบ")}
+                        <span className="stop-labels">
+                          {guideLabels(place).map((label) => (
+                            <span key={label.key} className={`guide-label is-${label.key}`}>
+                              {tGuide(lang, label.text)}
+                            </span>
+                          ))}
                         </span>
                       )}
                     </span>
@@ -1176,6 +1204,7 @@ function TalatNoiApp({ storePromise }) {
                 onMove={() => startMove(selected.id)}
                 onSetOnNavigationMap={() => (setNavPlacing({ kind: "place", id: selected.id }), setNavOpen(true))}
                 onDelete={() => setDeleteTarget(selected.id)}
+                allPlaces={doc.places}
                 onClose={closeCard}
                 onUploadingChange={setPhotoUploading}
                 footer={panelFooter}
@@ -1199,7 +1228,7 @@ function TalatNoiApp({ storePromise }) {
           <DirectionsList
             location={location}
             places={places}
-            selectedId={selectedId}
+            selectedId={selected && canRoute(selected) ? selectedId : null}
             onSelect={setSelectedId}
             lang={lang}
             onCenter={() => (setNavOpen(true), setCenterRequest((value) => value + 1))}
@@ -1226,10 +1255,9 @@ function TalatNoiApp({ storePromise }) {
       </MenuDrawer>
 
       {!editing && cardOpen && selected && (
-        <VisitorPlaceCard
+        <GuidePlaceCard
           key={selected.id}
           place={selected}
-          sequence={visiblePlaces}
           places={places}
           fix={location.usableFix}
           lang={lang}
@@ -1292,7 +1320,7 @@ function TalatNoiApp({ storePromise }) {
           <DirectionsList
             location={location}
             places={places}
-            selectedId={selectedId}
+            selectedId={selected && canRoute(selected) ? selectedId : null}
             onSelect={setSelectedId}
             lang={lang}
             onCenter={() => setCenterRequest((value) => value + 1)}

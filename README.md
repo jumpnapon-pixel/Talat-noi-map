@@ -8,6 +8,9 @@ map. Editors can add, select, move and update place pins directly on the illustr
 - **Working preview with the editor:** <https://claude.ai/artifact/L11qJxFD2DWdfMLXjzZyd4>
   (private until shared from its Share menu)
 - **How to edit the map (no coding):** [docs/EDITING-GUIDE.md](docs/EDITING-GUIDE.md)
+- **Visitor guide:** each card has a preview, the full story, a visit note, related stops and
+  sources; **Plan your walk** groups the places into three chapters. Directions appear only
+  for places whose entrance an editor has confirmed.
 - **How it is built:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 
 The map started as a snapshot of the Claude artifact

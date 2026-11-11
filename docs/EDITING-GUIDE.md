@@ -61,6 +61,27 @@ The place panel has, from top to bottom:
   fact-check details
 - **Delete place** (asks you to confirm)
 
+## Guide card, labels and directions
+
+Each place card shows a one-sentence preview, then **Read the story**, **When you visit**,
+**Related stops** and **Sources**. In the place panel:
+
+- **Guide card**: the preview in English and Thai, the **Label** (Place, Field note for
+  entries that rely on the field photo, Area guide for a neighbourhood story), **Search
+  aliases** (one per line, so old titles still find the place), **Related stops**,
+  **Sources** (title and https link) and **Research reviewed on**.
+- **Editor notes** are only for editors: matching notes, open questions and leads.
+- **Read the story** and **When you visit** hold the longer text. Leave a blank line between
+  paragraphs. Words between asterisks show in *italics*.
+- Hours and prices: leave them empty unless you have a current, dated source. Visitors then
+  see **Check before visiting**.
+
+**Directions stay off until you confirm the entrance.** Visitors see **Location to confirm**
+and no Directions, walking steps or menu destination for that place. After checking the
+actual accessible entrance or a public viewing point on site, open **Position**, set the real
+location if needed, then turn on **Entrance confirmed: offer directions** and fill in
+**Confirmed on site on** and **How it was confirmed**. Area guides never offer directions.
+
 ## Save, undo and recover
 
 - The toolbar always shows the state: **Unsaved changes**, **Saving…**, **Saved** or

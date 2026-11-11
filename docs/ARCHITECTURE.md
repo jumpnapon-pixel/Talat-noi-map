@@ -122,3 +122,22 @@ and data file it uses embedded (about 15 MB). It opens straight from disk or any
 makes no network requests and is read-only (no editor, since it has no shared database). It
 shows the edition built into the page (`src/data/published-seed.json`), so places published
 later from the claude.ai map are only included after that file is updated.
+
+## Visitor guide (research brief of 11 Nov 2026)
+
+- Place fields added to the schema (with defaults, so older records still load and saving
+  keeps them): `previewEn/Th`, `kind` (`place`, `field-note`, `area-guide`), `aliases`,
+  `related` (place ids), `sources` (`{id, title, url}`), `entranceConfirmed`,
+  `entranceConfirmedOn`, `entranceNote`, `researchReviewedOn`, `editorNotes`. Saving writes
+  the zod-parsed places, which drop unknown keys, so new fields must be added to the schema.
+- `src/app/place-card.jsx`: the visitor card (`GuidePlaceCard`) and **Plan your walk**
+  (`WalkGuide`). `src/app/guide.jsx`: labels, bilingual interface copy, search text, the
+  walk chapters (`WALK`) and a small paragraph and *italic* renderer (no HTML).
+- Directions gate: `tnCanRoute(place)` in `src/recovered/01-libraries-and-scene.js` (alias
+  `canRoute`) is true only when `entranceConfirmed` is on, the place is not an area guide and
+  it has coordinates. `Gd` (Directions links, the menu's destination list) and `HN` (walking
+  steps) both check it, so no map control can route to an unconfirmed place.
+- Search matches `nameEn`, `nameTh`, category and `aliases`.
+- The 15 entries were written from the brief by a script that matched each record by its
+  current title and photo file before updating it in place; the Thai "story and visit
+  note" block was split into `storyTh` and `tipTh` where the visit advice begins.

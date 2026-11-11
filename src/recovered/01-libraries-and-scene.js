@@ -14140,8 +14140,14 @@ Error generating stack: ` +
       a.toString()
     );
   }
+  // Talat Noi editor: directions, walking steps and route lists are offered only for places
+  // whose entrance or public viewing point an editor has confirmed, never for area guides.
+  function tnCanRoute(t) {
+    return !!t && t.entranceConfirmed === !0 && t.kind !== "area-guide" && qo(t);
+  }
   function Gd(t, e, n = Date.now()) {
-    if (t.verification === "checked" && qo(t)) return { href: AN(t, e, n), kind: "walking" };
+    if (!tnCanRoute(t)) return null;
+    if (qo(t)) return { href: AN(t, e, n), kind: "walking" };
     if (typeof t.mapsUrl == "string" && t.mapsUrl.trim()) {
       let i = iu(t.mapsUrl);
       return i ? { href: i, kind: "place" } : null;
@@ -14810,7 +14816,7 @@ Error generating stack: ` +
   function HN(t, e, n, a = [], i = Date.now()) {
     if (!Wo(n, i)) return { route: null, reason: "no-location" };
     if (n.accuracy > 40) return { route: null, reason: "uncertain-location" };
-    if (e.verification !== "checked" || !qo(e)) return { route: null, reason: "unverified-destination" };
+    if (!tnCanRoute(e)) return { route: null, reason: "unverified-destination" };
     let r = Rr(n),
       o = Rr(e);
     if (!A3(r, t) || !A3(o, t)) return { route: null, reason: "outside" };

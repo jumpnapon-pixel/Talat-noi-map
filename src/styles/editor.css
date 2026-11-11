@@ -1071,3 +1071,73 @@
     padding-bottom: 190px;
   }
 }
+
+/* Guide card fields */
+.ed-label {
+  font-size: 13px;
+  font-weight: 600;
+}
+.ed-related {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.ed-related legend {
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ed-related-list {
+  flex-wrap: wrap;
+  gap: 6px;
+  display: flex;
+}
+.ed-related-list label {
+  cursor: pointer;
+  border: 1px solid #d9e2e1;
+  border-radius: 999px;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  font-size: 12.5px;
+  display: inline-flex;
+}
+.ed-related-list label.is-on {
+  background: #e6f1ef;
+  border-color: #9cc6c1;
+}
+.ed-sources {
+  flex-direction: column;
+  gap: 8px;
+  display: flex;
+}
+.ed-source-row {
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 6px;
+  display: grid;
+}
+.ed-source-row input {
+  border: 1px solid #cfd8d6;
+  border-radius: 8px;
+  min-width: 0;
+  min-height: 38px;
+  padding: 6px 9px;
+  font-size: 13px;
+}
+.ed-directions {
+  border-top: 1px dashed #d9e2e1;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  display: flex;
+}
+@media (max-width: 760px) {
+  .ed-source-row {
+    grid-template-columns: 1fr auto;
+  }
+  .ed-source-row input:nth-child(2) {
+    grid-column: 1;
+  }
+}

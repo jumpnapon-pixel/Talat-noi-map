@@ -193,3 +193,131 @@ function SelectField({ label, value, items, onChange }) {
     </label>
   );
 }
+
+// One entry per line (search aliases). Keeps the typed text, blank lines included, while
+// the place stores only the non-empty lines.
+function LinesField({ label, hint, value, onChange, name, maxLength = 2000 }) {
+  const id = useId();
+  const joined = (value ?? []).join("\n");
+  const [text, setText] = useState(joined);
+  useEffect(() => {
+    if (text.split("\n").map((line) => line.trim()).filter(Boolean).join("\n") !== joined) setText(joined);
+  }, [joined]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <div className="ed-field">
+      <label htmlFor={id}>{label}</label>
+      <textarea
+        id={id}
+        name={name}
+        rows={3}
+        maxLength={maxLength}
+        value={text}
+        aria-describedby={hint ? `${id}-hint` : undefined}
+        onChange={(event) => {
+          setText(event.target.value);
+          onChange(event.target.value.split("\n").map((line) => line.trim()).filter(Boolean));
+        }}
+      />
+      {hint && (
+        <small id={`${id}-hint`} className="ed-hint">
+          {hint}
+        </small>
+      )}
+    </div>
+  );
+}
+
+// Pick related stops from the other places.
+function RelatedField({ value, places, currentId, onChange }) {
+  const chosen = new Set(value ?? []);
+  const others = places.filter((place) => place.id !== currentId);
+  return (
+    <fieldset className="ed-field ed-related" data-testid="related-field">
+      <legend>Related stops</legend>
+      <div className="ed-related-list">
+        {others.map((place) => (
+          <label key={place.id} className={chosen.has(place.id) ? "is-on" : ""}>
+            <input
+              type="checkbox"
+              checked={chosen.has(place.id)}
+              onChange={(event) =>
+                onChange(
+                  event.target.checked
+                    ? [...(value ?? []), place.id].slice(0, 8)
+                    : (value ?? []).filter((id) => id !== place.id),
+                )
+              }
+            />
+            {place.nameEn}
+          </label>
+        ))}
+      </div>
+      <small className="ed-hint">Up to 8. Shown on the card as buttons that open those places.</small>
+    </fieldset>
+  );
+}
+
+// Source links shown on the card under "Sources".
+function SourcesField({ value, onChange, error }) {
+  const sources = value ?? [];
+  const update = (index, patch) => onChange(sources.map((source, i) => (i === index ? { ...source, ...patch } : source)));
+  return (
+    <div className="ed-field ed-sources" data-testid="sources-field">
+      <span className="ed-label">Sources</span>
+      {sources.map((source, index) => (
+        <div key={index} className="ed-source-row">
+          <input
+            aria-label={`Source ${index + 1} title`}
+            placeholder="Publisher, title"
+            value={source.title}
+            maxLength={300}
+            onChange={(event) => update(index, { title: event.target.value })}
+          />
+          <input
+            aria-label={`Source ${index + 1} link`}
+            placeholder="https://"
+            value={source.url}
+            maxLength={1500}
+            onChange={(event) => update(index, { url: event.target.value.trim() })}
+          />
+          <button
+            type="button"
+            className="ed-icon-button"
+            aria-label={`Remove source ${index + 1}`}
+            onClick={() => onChange(sources.filter((_, i) => i !== index))}
+          >
+            <Icon.X size={16} />
+          </button>
+        </div>
+      ))}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => onChange([...sources, { id: "", title: "", url: "" }])}
+        disabled={sources.length >= 20}
+      >
+        <Icon.Plus /> Add source
+      </Button>
+      {error && <small className="ed-error">{error}</small>}
+    </div>
+  );
+}
+
+function DateField({ label, value, onChange, name, testId }) {
+  const id = useId();
+  return (
+    <div className="ed-field">
+      <label htmlFor={id}>{label}</label>
+      <input
+        id={id}
+        name={name}
+        type="date"
+        value={value || ""}
+        max={new Date().toISOString().slice(0, 10)}
+        onChange={(event) => onChange(event.target.value)}
+        data-testid={testId}
+      />
+    </div>
+  );
+}

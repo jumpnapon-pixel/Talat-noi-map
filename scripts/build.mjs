@@ -32,7 +32,9 @@ const APP_FILES = [
   "src/app/store.js",
   "src/app/history.js",
   "src/app/fields.jsx",
+  "src/app/guide.jsx",
   "src/app/place-panel.jsx",
+  "src/app/place-card.jsx",
   "src/app/editor-toolbar.jsx",
   "src/app/App.jsx",
   "src/app/entry.js",
@@ -70,7 +72,7 @@ async function buildScript() {
 }
 
 async function buildStyles() {
-  const css = ["src/styles/app.css", "src/styles/page.css", "src/styles/editor.css"].map(read).join("\n");
+  const css = ["src/styles/app.css", "src/styles/page.css", "src/styles/editor.css", "src/styles/guide.css"].map(read).join("\n");
   if (dev) return css;
   const { code } = await esbuild.transform(css, { loader: "css", minify: true, legalComments: "none" });
   return code;

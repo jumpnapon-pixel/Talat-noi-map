@@ -39,6 +39,10 @@ const hasCoordinates = qo;
 const NavigationMap = pE;
 const GoogleStreetMap = k3;
 const VisitorPlaceCard = mE;
+const PhotoViewer = $ee; // full-screen photo with close button
+const WalkingSteps = oS; // walking steps along the mapped lanes (confirmed places only)
+const DirectionsButton = qN; // Google Maps walking directions (confirmed places only)
+const canRoute = tnCanRoute; // place -> may it offer directions? (entrance confirmed)
 const DirectionsList = sS;
 const MenuDrawer = gE;
 const ArchitectureNotes = SU;
@@ -107,6 +111,8 @@ const Icon = {
   Settings: eg,
   Focus: od,
   Info: vl,
+  Book: B0,
+  Walk: Gc,
   ShieldCheck: tg,
   Image: j0,
   Pencil: ke("pencil", [

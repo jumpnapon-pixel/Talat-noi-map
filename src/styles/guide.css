@@ -1,0 +1,487 @@
+/* Visitor guide: place card sections, labels, list labels and "Plan your walk".
+   Uses the map's existing palette (ink #173b48, teal #277b78, sage text #566850). */
+
+/* Labels ------------------------------------------------------------------------------ */
+.guide-label {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  align-items: center;
+  padding: 2px 9px;
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.5;
+  display: inline-flex;
+}
+.guide-label.is-field-note {
+  color: #3f5f74;
+  background: #e7eff5;
+  border-color: #cfdde8;
+}
+.guide-label.is-area-guide {
+  color: #4b5f3a;
+  background: #ebf1e1;
+  border-color: #d3dfc3;
+}
+.guide-label.is-to-confirm {
+  color: #7b6128;
+  background: #fbf1da;
+  border-color: #ebdcb3;
+}
+.stop-labels {
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+  display: flex;
+}
+
+/* Place card ------------------------------------------------------------------------ */
+.guide-photo-meta {
+  color: #7d8975;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 8px 27px 0;
+  font-size: 12px;
+  line-height: 1.55;
+  display: flex;
+}
+.guide-photo-caption {
+  color: #5f6f58;
+  font-style: italic;
+  flex-basis: 100%;
+}
+a.guide-photo-credit {
+  text-decoration: underline;
+}
+.guide-body {
+  padding-top: 16px;
+}
+.guide-badges {
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  display: flex;
+}
+.card-body.guide-body h2 {
+  margin-top: 12px;
+}
+.guide-location {
+  color: #5f6f58;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  display: flex;
+}
+.guide-location svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.guide-preview {
+  color: #2f4a3f;
+  overflow-wrap: anywhere;
+  margin: 16px 0 0;
+  font-size: 17px;
+  line-height: 1.65;
+}
+.guide-uncertain {
+  color: #7b6128;
+  background: #fbf1da;
+  border: 1px solid #ebdcb3;
+  border-radius: 9px;
+  margin: 14px 0 0;
+  padding: 10px 13px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.card-body .guide-section {
+  border-top: 1px solid var(--border, #e2e8dc);
+  margin: 18px 0 0;
+  padding-top: 16px;
+}
+.guide-section > summary {
+  cursor: pointer;
+  color: var(--ink, #173b48);
+  border-radius: 8px;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 15px;
+  font-weight: 700;
+  list-style: none;
+  display: flex;
+}
+.guide-section > summary::-webkit-details-marker {
+  display: none;
+}
+.guide-section > summary::after {
+  content: "";
+  border-bottom: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  margin-right: 6px;
+  transition: transform 0.15s;
+  transform: rotate(45deg);
+}
+.guide-section[open] > summary::after {
+  transform: rotate(225deg);
+}
+.guide-section > summary:focus-visible {
+  outline: 2px solid var(--teal, #277b78);
+  outline-offset: 2px;
+}
+.guide-story > summary {
+  color: #fff;
+  background: var(--teal, #277b78);
+  justify-content: flex-start;
+  padding: 0 14px;
+}
+.guide-story[open] > summary {
+  margin-bottom: 10px;
+}
+.card-body .guide-section p {
+  color: #566850;
+  overflow-wrap: anywhere;
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.8;
+}
+.card-body .guide-section p:lang(th) {
+  line-height: 1.9;
+}
+.guide-facts {
+  border-top: 1px solid var(--border, #e2e8dc);
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  margin: 4px 0 0;
+  padding-top: 12px;
+  display: grid;
+}
+.guide-facts dt {
+  color: #73806a;
+  font-size: 12.5px;
+}
+.guide-facts dd {
+  overflow-wrap: anywhere;
+  margin: 3px 0 0;
+  font-size: 14px;
+}
+.card-body .guide-section .guide-day-note {
+  color: #7a8672;
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.guide-related-list {
+  flex-direction: column;
+  gap: 6px;
+  display: flex;
+}
+.guide-related-list button {
+  text-align: left;
+  border: 1px solid var(--border, #e2e8dc);
+  background: #fff;
+  border-radius: 10px;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 56px;
+  padding: 7px 10px 7px 7px;
+  display: flex;
+}
+.guide-related-list button:hover {
+  background: #f4f7ef;
+}
+.guide-related-list .stop-photo {
+  width: 46px;
+  height: 46px;
+}
+.guide-related-list button > span {
+  flex-direction: column;
+  flex: 1;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  display: flex;
+}
+.guide-related-list strong {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.guide-related-list > button > svg {
+  color: #8c9b83;
+  flex-shrink: 0;
+}
+.guide-sources ol {
+  margin: 4px 0 0;
+  padding-left: 22px;
+  list-style: decimal;
+}
+.guide-sources li {
+  color: #7a8672;
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.guide-sources a {
+  color: #2f5d5a;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+}
+.guide-dates {
+  color: #7a8672;
+  flex-direction: column;
+  gap: 2px;
+  margin: 20px 0 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  display: flex;
+}
+.guide-no-directions {
+  color: #7b6128;
+  flex: 1;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Plan your walk ------------------------------------------------------------------ */
+.walk-toggle {
+  border: 1px solid var(--line, #d9e2e1);
+  min-height: 44px;
+  color: var(--ink, #173b48);
+  white-space: nowrap;
+  background: #fff;
+  border-radius: 12px;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+}
+.walk-toggle.active {
+  background: var(--teal, #277b78);
+  border-color: var(--teal, #277b78);
+  color: #fff;
+}
+.explorer-tabs {
+  background: #eef2ea;
+  border-radius: 11px;
+  flex: 1;
+  gap: 3px;
+  min-width: 0;
+  padding: 3px;
+  display: flex;
+}
+.explorer-tabs button {
+  color: #4f6249;
+  white-space: nowrap;
+  border-radius: 8px;
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 10px;
+  font-size: 13.5px;
+  font-weight: 650;
+  display: flex;
+}
+.explorer-tabs button[aria-selected="true"] {
+  color: var(--ink, #173b48);
+  background: #fff;
+  box-shadow: 0 1px 3px #0000001f;
+}
+.walk-guide {
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 14px 22px;
+  display: flex;
+}
+.walk-welcome {
+  color: #4b5f46;
+  margin: 2px 2px 4px;
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+.walk-chapter {
+  border: 1px solid var(--line, #d9e2e1);
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.walk-chapter-head {
+  text-align: left;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 10px 14px;
+  display: flex;
+}
+.walk-chapter-head > span:nth-child(2) {
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+}
+.walk-chapter-head small {
+  color: #7a8672;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 650;
+}
+.walk-chapter-head strong {
+  color: var(--ink, #173b48);
+  font-size: 15.5px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+.walk-chapter-number {
+  color: #fff;
+  background: var(--teal, #277b78);
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+}
+.walk-chevron {
+  color: #8c9b83;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.walk-chapter.open .walk-chevron {
+  transform: rotate(90deg);
+}
+.walk-chapter-body {
+  border-top: 1px solid #edf1e8;
+  padding: 12px 12px 14px;
+}
+.walk-chapter-body > p {
+  color: #566850;
+  margin: 0 2px 12px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.walk-chapter-body h4 {
+  color: #6c7c66;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  margin: 14px 2px 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.walk-stops {
+  flex-direction: column;
+  gap: 6px;
+  display: flex;
+}
+.walk-stop {
+  text-align: left;
+  border: 1px solid #e6ebe1;
+  background: #fbfcf9;
+  border-radius: 10px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 58px;
+  padding: 6px 10px 6px 6px;
+  display: flex;
+}
+.walk-stop:hover,
+.walk-stop.selected {
+  background: #eef4e8;
+  border-color: #c9d8c0;
+}
+.walk-stop .stop-photo {
+  width: 44px;
+  height: 44px;
+}
+.walk-step {
+  color: var(--teal, #277b78);
+  border: 1.5px solid var(--teal, #277b78);
+  border-radius: 50%;
+  flex-shrink: 0;
+  justify-content: center;
+  align-items: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+}
+.walk-stop-copy {
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+  display: flex;
+}
+.walk-stop-copy strong {
+  color: #24392f;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+.walk-stop-labels {
+  flex-wrap: wrap;
+  gap: 4px;
+  display: flex;
+}
+.walk-stop > svg {
+  color: #8c9b83;
+  flex-shrink: 0;
+}
+.walk-tips {
+  color: #566850;
+  background: #edf2e6;
+  border-radius: 12px;
+  padding: 14px 15px;
+  font-size: 13.5px;
+  line-height: 1.65;
+}
+.walk-tips p {
+  margin: 0 0 8px;
+}
+.walk-tips .walk-note {
+  color: #6c7c66;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  font-size: 12.5px;
+  display: flex;
+}
+.walk-tips .walk-note svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+@media (max-width: 760px) {
+  .walk-toggle {
+    min-height: 40px;
+    padding: 0 11px;
+    font-size: 13px;
+  }
+  .guide-photo-meta {
+    padding: 8px 20px 0;
+  }
+  .guide-preview {
+    font-size: 16px;
+  }
+  .guide-facts {
+    grid-template-columns: 1fr;
+  }
+}

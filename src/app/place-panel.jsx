@@ -1,7 +1,23 @@
 // The place editing panel (for the selected pin) and the short form for a new pin.
 
 // Fields added after the first published edition count as their defaults when missing.
-const PLACE_DEFAULTS = { photoCaption: "", illustrationEstimated: false, rotation: 0, mapsUrl: "" };
+const PLACE_DEFAULTS = {
+  photoCaption: "",
+  illustrationEstimated: false,
+  rotation: 0,
+  mapsUrl: "",
+  previewEn: "",
+  previewTh: "",
+  kind: "place",
+  aliases: [],
+  related: [],
+  sources: [],
+  entranceConfirmed: false,
+  entranceConfirmedOn: "",
+  entranceNote: "",
+  researchReviewedOn: "",
+  editorNotes: "",
+};
 
 function placeStatus(place, publishedPlace) {
   if (!publishedPlace) return { key: "new", label: "New, not published yet" };
@@ -36,6 +52,7 @@ function PlacePanel({
   onMove,
   onSetOnNavigationMap,
   onDelete,
+  allPlaces = [],
   onClose,
   onUploadingChange,
   footer,
@@ -153,7 +170,74 @@ function PlacePanel({
           {issues.photoUrl && <p className="ed-error">{issues.photoUrl}</p>}
         </PanelSection>
 
-        <PanelSection title="Description">
+        <PanelSection title="Guide card" description="What visitors see first on the place card." testId="guide-section">
+          <TextField
+            label="Card preview in English"
+            name="previewEn"
+            multiline
+            rows={2}
+            maxLength={400}
+            value={place.previewEn}
+            hint="One sentence. Shown before “Read the story”."
+            onChange={set("previewEn")}
+          />
+          <TextField
+            label="Card preview in Thai"
+            name="previewTh"
+            lang="th"
+            multiline
+            rows={2}
+            maxLength={400}
+            value={place.previewTh}
+            onChange={set("previewTh")}
+          />
+          <SelectField
+            label="Label"
+            value={place.kind || "place"}
+            items={[
+              { value: "place", label: "Place" },
+              { value: "field-note", label: "Field note (relies on the field photo)" },
+              { value: "area-guide", label: "Area guide (a neighbourhood, never routed)" },
+            ]}
+            onChange={(value) => onChange({ kind: value }, null)}
+          />
+          <LinesField
+            label="Search aliases"
+            name="aliases"
+            value={place.aliases}
+            hint="One per line. Old titles and other spellings, so searches still find this place."
+            onChange={(value) => onChange({ aliases: value }, `${place.id}:aliases`)}
+          />
+          <RelatedField
+            value={place.related}
+            places={allPlaces}
+            currentId={place.id}
+            onChange={(value) => onChange({ related: value }, null)}
+          />
+          <SourcesField
+            value={place.sources}
+            error={issues.sources}
+            onChange={(value) => onChange({ sources: value }, `${place.id}:sources`)}
+          />
+          <DateField
+            label="Research reviewed on"
+            name="researchReviewedOn"
+            value={place.researchReviewedOn}
+            onChange={(value) => onChange({ researchReviewedOn: value }, null)}
+          />
+          <TextField
+            label="Editor notes"
+            name="editorNotes"
+            multiline
+            rows={6}
+            maxLength={4000}
+            value={place.editorNotes}
+            hint="Only editors see this: matching notes, open questions, leads to check."
+            onChange={set("editorNotes")}
+          />
+        </PanelSection>
+
+        <PanelSection title="Read the story">
           <TextField
             label="Story in English"
             name="storyEn"
@@ -176,7 +260,7 @@ function PlacePanel({
           />
         </PanelSection>
 
-        <PanelSection title="Visitor information">
+        <PanelSection title="When you visit">
           <TextField
             label="Visiting tip in English"
             name="tipEn"
@@ -278,6 +362,36 @@ function PlacePanel({
             {!coordinatesSet && (
               <p className="ed-note">Not set yet. Without it, the place is left out of the navigation map and directions.</p>
             )}
+            <div className="ed-directions" data-testid="directions-confirm">
+              <Toggle
+                label="Entrance confirmed: offer directions"
+                name="entranceConfirmed"
+                checked={!!place.entranceConfirmed}
+                hint={
+                  place.kind === "area-guide"
+                    ? "Area guides never offer directions, even when this is on."
+                    : "Turn on only after checking the actual accessible entrance or a public viewing point on site. Until then visitors see “Location to confirm” and no directions."
+                }
+                onChange={(value) => onChange({ entranceConfirmed: value }, null)}
+              />
+              {issues.entranceConfirmed && <p className="ed-error">{issues.entranceConfirmed}</p>}
+              <DateField
+                label="Confirmed on site on"
+                name="entranceConfirmedOn"
+                value={place.entranceConfirmedOn}
+                onChange={(value) => onChange({ entranceConfirmedOn: value }, null)}
+              />
+              <TextField
+                label="How it was confirmed"
+                name="entranceNote"
+                multiline
+                rows={2}
+                maxLength={500}
+                value={place.entranceNote}
+                hint="Which entrance or viewpoint, and how. Editors only."
+                onChange={set("entranceNote")}
+              />
+            </div>
           </div>
         </PanelSection>
 

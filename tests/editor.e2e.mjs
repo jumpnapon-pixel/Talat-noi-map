@@ -16,7 +16,7 @@ const require = createRequire(import.meta.url);
 const { chromium, devices } = require("playwright");
 const root = fileURLToPath(new URL("..", import.meta.url));
 const page = process.argv.slice(2).find((arg) => !arg.startsWith("--")) ?? "index.html";
-const only = process.argv.find((arg) => arg.startsWith("--only="))?.slice(7).split(",") ?? ["visitor", "desktop", "mobile"];
+const only = process.argv.find((arg) => arg.startsWith("--only="))?.slice(7).split(",") ?? ["visitor", "guide", "desktop", "mobile"];
 const shots = join(root, "test-results");
 const seed = JSON.parse(readFileSync(join(root, "src/data/published-seed.json"), "utf8"));
 mkdirSync(shots, { recursive: true });
@@ -151,10 +151,10 @@ async function enterEditor(tab) {
   await tab.waitForTimeout(600);
 }
 
-async function selectPin(tab, id, { touch = false } = {}) {
+async function selectPin(tab, id, { touch = false, panel = "[data-testid=place-panel]" } = {}) {
   const box = await marker(tab, id).boundingBox();
   touch ? await tab.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2) : await marker(tab, id).click();
-  await tab.waitForSelector("[data-testid=place-panel]", { timeout: 5000 });
+  await tab.waitForSelector(panel, { timeout: 5000 });
 }
 
 // A point on the illustration, as fractions of the visible part of the map.
@@ -217,6 +217,106 @@ try {
     check(errors.length === 0, "no page errors for visitors", errors.join(" | "));
     await tab.screenshot({ path: join(shots, "01-visitor.png") });
     await context.close();
+  }
+
+  // 1b. The visitor guide (research brief of 11 Nov 2026).
+  if (only.includes("guide")) {
+    const { context, tab, errors } = await openPage(browser, { role: "viewer", fresh: true });
+    const BRIEF_IDS = ["holy-rosary", "old-bank", "so-heng-tai", "rong-kueak", "street-art-lane", "chow-sue-kong", "fieldwork-p01", "fieldwork-p02", "fieldwork-p03", "fieldwork-p04", "fieldwork-p05", "fieldwork-p07", "fieldwork-p08", "fieldwork-p09", "fieldwork-p10"];
+    const PHOTOS = { "holy-rosary": "153419", "fieldwork-p01": "155403", "fieldwork-p02": "153940", "fieldwork-p03": "154919", "fieldwork-p04": "154539", "fieldwork-p05": "152613", "fieldwork-p07": "153358", "fieldwork-p08": "152829", "fieldwork-p09": "152547", "fieldwork-p10": "150559" };
+    const briefPlaces = seed.places.filter((place) => BRIEF_IDS.includes(place.id));
+    check(briefPlaces.length === 15 && briefPlaces.every((place) => place.previewEn && place.previewTh && place.storyEn && place.storyTh && place.tipEn && place.tipTh), "all 15 places have English and Thai preview, story and visit note");
+    check(briefPlaces.every((place) => !/\[(S|P)\d\d\]/.test(`${place.storyEn}${place.storyTh}${place.tipEn}${place.previewEn}`)), "no evidence keys like [S03] in visitor text");
+    check(Object.entries(PHOTOS).every(([id, file]) => seed.places.find((place) => place.id === id).photoUrl.includes(file)), "the ten field photos are on the intended places");
+    check(seed.places.find((place) => place.id === "holy-rosary").photoUrl !== seed.places.find((place) => place.id === "fieldwork-p07").photoUrl, "the church and Bumblebee keep separate photos");
+
+    // Old titles and Thai aliases still find renamed places.
+    const search = tab.locator(".search-field input");
+    for (const [term, id] of [["Local snack shop", "fieldwork-p03"], ["Yellow robot sculpture", "fieldwork-p07"], ["บัมเบิ้ลบี", "fieldwork-p07"], ["Outdoor photography display", "fieldwork-p08"], ["Mother Roaster entrance", "fieldwork-p09"], ["Som tam", "fieldwork-p05"]]) {
+      await search.fill(term);
+      await tab.waitForTimeout(150);
+      check((await tab.locator(`.stop[data-place-id="${id}"]`).count()) === 1, `searching “${term}” finds ${id}`);
+    }
+    await search.fill("");
+
+    // Card structure: preview first, story behind Read the story, sources, labels.
+    await marker(tab, "holy-rosary").click();
+    await tab.waitForSelector("[data-testid=place-card]");
+    check((await tab.locator("[data-testid=card-preview]").innerText()).startsWith("Look for the gate"), "the card opens with the one-sentence preview");
+    check(!(await tab.locator("[data-testid=read-story]").evaluate((el) => el.open)), "the full story waits behind Read the story");
+    await tab.locator("[data-testid=read-story] summary").click();
+    check((await tab.locator("[data-testid=read-story]").innerText()).includes("Kalawar"), "Read the story opens the full history");
+    check((await tab.locator("[data-testid=sources] a").count()) === 4, "Holy Rosary Church lists its 4 sources as links");
+    check(await tab.locator("[data-testid=label-to-confirm]").isVisible(), "unconfirmed places say Location to confirm");
+    check((await tab.locator("[data-testid=place-card] .walking-button").count()) === 0 && (await tab.locator("[data-testid=no-directions]").isVisible()), "no Directions for an unconfirmed entrance");
+    await tab.screenshot({ path: join(shots, "03-guide-card.png") });
+    // Related stop opens that place.
+    await tab.locator('[data-testid=related-stops] [data-related-id="fieldwork-p07"]').click();
+    await tab.waitForSelector('[data-testid=place-card][data-place-id="fieldwork-p07"]');
+    check(true, "a related stop opens its own card");
+    await tab.locator("[data-testid=place-card] .panel-close").click();
+
+    // Area guide and field note.
+    await marker(tab, "old-bank").click();
+    await tab.waitForSelector('[data-testid=place-card][data-place-id="old-bank"]');
+    check(await tab.locator("[data-testid=label-area-guide]").isVisible(), "the neighbourhood entry is labelled Area guide");
+    check((await tab.locator("[data-testid=label-to-confirm]").count()) === 0 && (await tab.locator("[data-testid=place-card] .walking-button").count()) === 0, "an area guide does not route anywhere");
+    await tab.locator("[data-testid=place-card] .panel-close").click();
+    await marker(tab, "fieldwork-p02").click();
+    await tab.waitForSelector('[data-testid=place-card][data-place-id="fieldwork-p02"]');
+    check(await tab.locator("[data-testid=label-field-note]").isVisible(), "the unnamed cart is a Field note");
+    check((await tab.locator("[data-testid=place-card] .walking-button").count()) === 0, "the unnamed cart cannot launch directions");
+    await tab.locator("[data-testid=place-card] .panel-close").click();
+
+    // Navigation menu offers directions only to confirmed places.
+    await tab.locator(".menu-button").click();
+    await tab.waitForTimeout(300);
+    await tab.locator("#tour-menu #walking-destination").click();
+    await tab.waitForSelector("[role=option]");
+    const destinations = await tab.locator("[role=option]").allInnerTexts();
+    const confirmed = seed.places.filter((place) => place.entranceConfirmed && place.kind !== "area-guide" && place.lat !== null).map((place) => place.nameEn);
+    check(destinations.length === confirmed.length && destinations.every((name) => confirmed.includes(name.trim())), "the navigation menu lists only confirmed destinations", destinations.join(", ") || "none");
+    await tab.keyboard.press("Escape");
+    await tab.keyboard.press("Escape");
+    await tab.waitForTimeout(200);
+
+    // Plan your walk keeps search, filter and map position.
+    await tab.locator(".filter-row button", { hasText: "Food & drink" }).click();
+    await search.fill("o");
+    await tab.locator(".zoom-controls button[aria-label='Zoom in']").click();
+    await tab.waitForTimeout(300);
+    const zoomBefore = await tab.locator(".map-gesture-hint span").innerText();
+    await tab.locator("[data-testid=plan-walk]").click();
+    await tab.waitForSelector("[data-testid=walk-guide]");
+    await tab.locator('[data-chapter="lanes"] .walk-chapter-head').click();
+    await tab.locator('[data-chapter="lanes"] [data-walk-stop="rong-kueak"]').click();
+    await tab.waitForSelector('[data-testid=place-card][data-place-id="rong-kueak"]');
+    check(true, "a walk chapter opens a place card");
+    await tab.screenshot({ path: join(shots, "04-walk.png") });
+    await tab.locator("[data-testid=place-card] .panel-close").click();
+    await tab.waitForTimeout(200);
+    check(await tab.locator("[data-testid=walk-guide]").isVisible(), "closing the card returns to the walk");
+    check(
+      (await search.inputValue()) === "o" &&
+        (await tab.locator(".filter-row button[aria-pressed=true]").innerText()).includes("Food") &&
+        (await tab.locator(".map-gesture-hint span").innerText()) === zoomBefore,
+      "search, filter and map zoom are unchanged after visiting a stop",
+    );
+    check(errors.length === 0, "no page errors in the guide", errors.join(" | "));
+    await context.close();
+
+    // Thai on a phone: the card wraps without sideways scrolling.
+    const phone = await openPage(browser, { role: "viewer", device: "iPhone 13", fresh: true });
+    await phone.tab.locator(".language-button").tap();
+    await selectPin(phone.tab, "chow-sue-kong", { touch: true, panel: "[data-testid=place-card]" });
+    await phone.tab.locator("[data-testid=read-story] summary").tap();
+    await phone.tab.locator("[data-testid=sources] summary").tap();
+    await phone.tab.waitForTimeout(300);
+    const overflow = await phone.tab.locator("[data-testid=place-card] .panel-scroll").evaluate((el) => el.scrollWidth - el.clientWidth);
+    check(overflow <= 1 && (await phone.tab.locator("[data-testid=read-story]").innerText()).includes("ศาลเจ้า"), "Thai story wraps on a phone", `overflow ${overflow}px`);
+    await phone.tab.screenshot({ path: join(shots, "05-guide-thai-phone.png") });
+    check(phone.errors.length === 0, "no page errors in Thai on a phone", phone.errors.join(" | "));
+    await phone.context.close();
   }
 
   // 2. Editor on desktop.
@@ -317,6 +417,12 @@ try {
   check(savedRong.nameEn === "Rong Kueak Shrine (Shoe Shrine)" && savedRong.photoCaption === "Shrine gate at dusk" && /^\/_blob\//.test(savedRong.photoUrl), "draft keeps text, caption and the durable photo URL");
   check(draft.places.length === seed.places.length && new Set(draft.places.map((place) => place.id)).size === seed.places.length, "existing place IDs are kept without duplicates");
   check((await fakeDb(tab, "map/published")) === null, "saving a draft does not change the visitor map");
+  const savedHoly = draft.places.find((place) => place.id === "holy-rosary");
+  const savedPuffs = draft.places.find((place) => place.id === "fieldwork-p03");
+  check(
+    savedHoly.sources.length === 4 && savedHoly.previewEn.startsWith("Look for the gate") && savedHoly.related.includes("fieldwork-p07") && savedPuffs.aliases.includes("Local snack shop") && savedHoly.editorNotes.includes("Editorial check"),
+    "saving keeps previews, sources, related stops, aliases and editor notes",
+  );
 
   // Refresh: the pin and photo come back from the saved draft.
   await tab.reload({ waitUntil: "networkidle" });
@@ -355,7 +461,10 @@ try {
 
   // Search the list and select a pin from it.
   await tab.locator("[data-testid=list-search]").fill("holy");
-  check((await tab.locator(".stop-list .stop").count()) === 1, "the place list can be searched");
+  check(
+    (await tab.locator(".stop-list .stop").count()) === 2 && (await tab.locator('.stop[data-place-id="fieldwork-p07"]').count()) === 1,
+    "the place list can be searched (Holy Rosary Church and Bumblebee near it)",
+  );
   await tab.locator('.stop[data-place-id="holy-rosary"]').click();
   await tab.waitForTimeout(300);
   check(await marker(tab, "holy-rosary").evaluate((el) => el.classList.contains("is-selected")), "choosing a list entry highlights its pin");
@@ -422,10 +531,21 @@ try {
   await tab.getByRole("button", { name: "Replace theirs with mine" }).click();
   check((await waitSaved(tab)) === "saved", "after confirming, your version can replace theirs");
 
+  // Confirming an entrance turns on directions for visitors.
+  await tab.locator('.stop[data-place-id="so-heng-tai"]').click();
+  await tab.waitForSelector("[data-testid=place-panel]");
+  await tab.locator("[data-testid=directions-confirm] input[name=entranceConfirmed]").check();
+  await tab.click("[data-testid=place-panel] [aria-label='Close place panel']");
+
   // Preview, then publish.
   await tab.click("[data-testid=tool-preview]");
   await tab.waitForSelector("[data-testid=preview-banner]");
   check((await tab.locator("[data-testid=editor-toolbar]").count()) === 0, "Preview shows the visitor experience without editing tools");
+  await marker(tab, "so-heng-tai").click();
+  await tab.waitForSelector('[data-testid=place-card][data-place-id="so-heng-tai"]');
+  check(await tab.locator("[data-testid=place-card] .walking-button").isVisible(), "a confirmed entrance shows Directions in the preview");
+  check((await tab.locator("[data-testid=label-to-confirm]").count()) === 0, "a confirmed place drops the Location to confirm label");
+  await tab.locator("[data-testid=place-card] .panel-close").click();
   await tab.screenshot({ path: join(shots, "09-preview.png") });
   await tab.click("[data-testid=preview-back]");
   await tab.waitForSelector("[data-testid=editor-toolbar]");

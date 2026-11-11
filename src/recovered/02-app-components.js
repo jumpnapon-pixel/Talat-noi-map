@@ -65,6 +65,42 @@
       // Talat Noi editor additions (older records default to these values).
       photoCaption: kg.default(""),
       illustrationEstimated: Yt.boolean().default(!1),
+      // Talat Noi editor: guide content. previewEn/Th is the one-line card preview; kind
+      // labels field notes and area guides; aliases keep old titles searchable; related
+      // holds place ids; sources are the links shown on the card. Directions are offered
+      // only once an editor confirms the entrance (entranceConfirmed).
+      previewEn: Yt.string().trim().max(400).default(""),
+      previewTh: Yt.string().trim().max(400).default(""),
+      kind: Yt.enum(["place", "field-note", "area-guide"]).default("place"),
+      aliases: Yt.array(Yt.string().trim().min(1).max(120)).max(20).default([]),
+      related: Yt.array(Yt.string().regex(/^[a-z0-9-]{1,80}$/)).max(8).default([]),
+      sources: Yt.array(
+        Yt.object({
+          id: Yt.string().trim().max(12).default(""),
+          title: Yt.string().trim().min(1, "Give each source a title.").max(300),
+          url: Yt.string()
+            .trim()
+            .max(1500)
+            .regex(/^https:\/\/[^\s]+$/i, "Use an https link for each source."),
+        }),
+      )
+        .max(20)
+        .default([]),
+      entranceConfirmed: Yt.boolean().default(!1),
+      entranceConfirmedOn: Yt.string()
+        .refine(
+          (t) => !t || (/^\d{4}-\d{2}-\d{2}$/.test(t) && !Number.isNaN(Date.parse(t))),
+          "Use a real date (YYYY-MM-DD).",
+        )
+        .default(""),
+      entranceNote: Yt.string().trim().max(500).default(""),
+      researchReviewedOn: Yt.string()
+        .refine(
+          (t) => !t || (/^\d{4}-\d{2}-\d{2}$/.test(t) && !Number.isNaN(Date.parse(t))),
+          "Use a real date (YYYY-MM-DD).",
+        )
+        .default(""),
+      editorNotes: Yt.string().trim().max(4000).default(""),
     }).superRefine((t, e) => {
       ((t.lat === null) != (t.lng === null) &&
         e.addIssue({
@@ -72,6 +108,14 @@
           message: "Enter both latitude and longitude, or leave both blank.",
           path: ["lat"],
         }),
+        // Talat Noi editor: directions need the confirmed entrance's coordinates.
+        t.entranceConfirmed &&
+          (t.lat === null || t.lng === null) &&
+          e.addIssue({
+            code: "custom",
+            message: "Set the real location before confirming the entrance for directions.",
+            path: ["entranceConfirmed"],
+          }),
         t.verification === "checked" &&
           (!t.lastChecked || !t.source || !t.storyEn || !t.tipEn || !t.location) &&
           e.addIssue({
