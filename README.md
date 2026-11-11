@@ -40,7 +40,12 @@ artifact's Editors and Owner can edit there.
 ## Share link and QR
 
 The in-app **Share map** button, copy link and QR use `SHARE_URL` in `src/app/share.jsx`.
-Change it there when the launch link changes, then rebuild.
+Change it there when the launch link changes, then rebuild and make the printable QR:
+
+```sh
+npm run build
+node scripts/make-qr.mjs   # dist/launch-qr/talat-noi-map-qr.png (1,215 px) and .svg, checked by decoding
+```
 
 ## Share as one file
 
