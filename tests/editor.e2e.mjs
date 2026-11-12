@@ -243,12 +243,19 @@ try {
 
     // Old titles and Thai aliases still find renamed places.
     const search = tab.locator(".search-field input");
-    for (const [term, id] of [["Local snack shop", "fieldwork-p03"], ["Yellow robot sculpture", "fieldwork-p07"], ["บัมเบิ้ลบี", "fieldwork-p07"], ["Outdoor photography display", "fieldwork-p08"], ["Mother Roaster entrance", "fieldwork-p09"], ["Som tam", "fieldwork-p05"]]) {
+    for (const [term, id] of [["Local snack shop", "fieldwork-p03"], ["Yellow robot sculpture", "fieldwork-p07"], ["บัมเบิ้ลบี", "fieldwork-p07"], ["Outdoor photography display", "fieldwork-p08"], ["Mother Roaster entrance", "fieldwork-p09"], ["Som tam", "fieldwork-p05"], ["coffee", "fieldwork-p09"], ["กาแฟ", "fieldwork-p09"], ["chocolate", "32bar-x-chocolate"]]) {
       await search.fill(term);
       await tab.waitForTimeout(150);
       check((await tab.locator(`.stop[data-place-id="${id}"]`).count()) === 1, `searching “${term}” finds ${id}`);
     }
+    await search.fill("rosary");
+    await tab.waitForTimeout(150);
+    check((await tab.locator(".stop[data-place-id]").first().getAttribute("data-place-id")) === "holy-rosary", "name matches come first in search results");
     await search.fill("");
+    check(
+      (await tab.evaluate(() => [...document.querySelectorAll("button")].some((button) => button.textContent.includes("Street map")))) === false,
+      "the unavailable Street map view is gone",
+    );
 
     // Card structure: preview first, story behind Read the story, sources, labels.
     await marker(tab, "holy-rosary").click();
@@ -456,6 +463,13 @@ try {
           .map((el) => el.dataset.testid || el.className || el.textContent),
       );
       const labels = await tab.locator(".map-marker:not(.is-selected) .pin-label").evaluateAll((els) => els.filter((el) => el.offsetParent).length);
+      const offscreen = await tab.evaluate(() => {
+        const view = document.querySelector(".map-viewport").getBoundingClientRect();
+        return [...document.querySelectorAll(".map-marker[data-place-id] .pin-head")]
+          .map((el) => el.getBoundingClientRect())
+          .filter((b) => b.left < view.left || b.right > view.right || b.top < view.top || b.bottom > view.bottom).length;
+      });
+      check(offscreen === 0, `${label}: every pin is on screen when the map opens`, `${offscreen} off screen`);
       await tab.locator(".map-marker[data-place-id=fieldwork-p09]").tap();
       await tab.waitForSelector("[data-testid=place-card]");
       await tab.waitForTimeout(400);
@@ -517,6 +531,13 @@ try {
       await tab.locator("[data-testid=filter-done]").tap();
       await tab.waitForTimeout(300);
       check(await tab.locator("[data-testid=active-filters]").isVisible(), "an active filter shows a visible reset");
+      await tab.locator("[data-testid=filter-button]").tap();
+      await tab.locator("[data-testid=filter-sheet] .view-switch button", { hasText: "Original" }).tap();
+      await tab.waitForTimeout(400);
+      check((await tab.locator("[data-testid=filter-sheet]").count()) === 0, "picking a map view closes the filter sheet");
+      await tab.locator("[data-testid=filter-button]").tap();
+      await tab.locator("[data-testid=filter-sheet] .view-switch button", { hasText: "Illustrated" }).tap();
+      await tab.waitForTimeout(400);
       await tab.locator("[data-testid=reset-filters]").tap();
       check((await tab.locator("[data-testid=active-filters]").count()) === 0 && (await tab.locator(".map-marker[data-place-id]").count()) === seed.places.length, "Reset filters brings every place back");
       check((await tab.locator("[data-testid=open-now]").isVisible()) === false && (await tab.locator(".map-marker[data-place-id=fieldwork-p08]").count()) === 1, "no Open now filter is on by default; outdoor art stays on the map");

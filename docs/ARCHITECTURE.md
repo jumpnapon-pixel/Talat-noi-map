@@ -137,7 +137,9 @@ later from the claude.ai map are only included after that file is updated.
   `canRoute`) is true only when `entranceConfirmed` is on, the place is not an area guide and
   it has coordinates. `Gd` (Directions links, the menu's destination list) and `HN` (walking
   steps) both check it, so no map control can route to an unconfirmed place.
-- Search matches `nameEn`, `nameTh`, category and `aliases`.
+- Search (`searchScore`) matches names first, then old titles, aliases and category, then
+  the preview, story, visit note and address, so “coffee” finds Mother Roaster. Results are
+  sorted by that order while searching.
 - The 15 entries were written from the brief by a script that matched each record by its
   current title and photo file before updating it in place; the Thai "story and visit
   note" block was split into `storyTh` and `tipTh` where the visit advice begins.
@@ -169,3 +171,14 @@ later from the claude.ai map are only included after that file is updated.
   link and QR. The QR is drawn by the vendored `qrcode-generator` (MIT,
   `src/vendor/qrcode-generator.js`); **Download QR** saves a 1,215 px PNG through the
   artifact `downloads` capability or a normal download.
+
+## Visitor-test fixes (12 Nov 2026)
+
+- The “Street map” view was removed: it loaded Google Maps with a key from `/api/map-config`,
+  which this map has no server for, so visitors saw “Street map unavailable”. The OSM-based
+  Navigation map covers street-level use.
+- Pins spread apart to avoid overlaps are kept inside the illustration (24 px sides, 46 px
+  top), so none end up off screen on a phone.
+- Choosing a map view in the phone filter sheet closes the sheet.
+- Phones start at the largest zoom that keeps every pin head on screen (measured after
+  spreading). With today's pins that is the whole width, so the start view is “Fit”.

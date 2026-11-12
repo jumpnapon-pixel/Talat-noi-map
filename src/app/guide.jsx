@@ -54,9 +54,17 @@ function guideLabels(place) {
   return labels;
 }
 
-// Every name a place can be searched by, including titles it had before the brief.
-const searchText = (place) =>
-  [place.nameEn, place.nameTh, place.category, ...(place.aliases ?? [])].join(" ").toLowerCase();
+// Search: 3 = a name matches, 2 = an old title, alias or category, 1 = the preview, story,
+// visit note or address mentions it (so "coffee" finds Mother Roaster), 0 = no match.
+function searchScore(place, query) {
+  const q = (query || "").trim().toLowerCase();
+  if (!q) return 1;
+  const has = (text) => !!text && text.toLowerCase().includes(q);
+  if (has(place.nameEn) || has(place.nameTh)) return 3;
+  if ((place.aliases ?? []).some(has) || has(place.category) || has(categoryLabel(place.category, "th"))) return 2;
+  if ([place.previewEn, place.previewTh, place.storyEn, place.storyTh, place.tipEn, place.tipTh, place.location].some(has)) return 1;
+  return 0;
+}
 
 function formatGuideDate(iso, lang) {
   if (!iso) return "";

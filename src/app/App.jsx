@@ -160,8 +160,10 @@ function TalatNoiApp({ storePromise }) {
       (flatPlacing?.kind === "move" && flatPlacing.id === place.id) ||
       ((category === "All" || place.category === category) &&
         (!openNow || scheduleState(place).kind === "open") &&
-        searchText(place).includes(query.trim().toLowerCase())),
+        searchScore(place, query) > 0),
   );
+  // Best matches first while searching (names, then old titles, then stories).
+  if (query.trim()) visiblePlaces.sort((a, b) => searchScore(b, query) - searchScore(a, query));
   const dirty = (editing || previewing) && savedJson !== null && JSON.stringify(doc) !== savedJson;
   const issues = useMemo(() => (editing ? collectIssues(doc.places) : null), [editing, doc.places]);
   const saveView =
@@ -263,6 +265,34 @@ function TalatNoiApp({ storePromise }) {
     observer.observe(canvas);
     return () => observer.disconnect();
   }, []);
+
+  // On a portrait phone the wide illustration fills only a strip at "Fit". Open zoomed in as far
+  // as the screen allows while every pin (with a margin) stays visible; Fit still shows it all.
+  const startView = useRef(false);
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (startView.current || editing || !isMobile || view !== "digital" || !canvasSize.w || !viewport) return;
+    const { clientWidth: width, clientHeight: height } = viewport;
+    if (!width || height <= width || !places.length) return;
+    startView.current = true;
+    // Measure where the pin heads actually are (after spreading) at Fit, plus a margin.
+    requestAnimationFrame(() => {
+      const canvas = canvasRef.current?.getBoundingClientRect();
+      const heads = [...(canvasRef.current?.querySelectorAll(".map-marker[data-place-id] .pin-head, .map-marker[data-place-id] .model-art") ?? [])].map(
+        (el) => el.getBoundingClientRect(),
+      );
+      if (!canvas?.width || !heads.length) return;
+      const pad = 12;
+      const clamp = (value) => Math.max(0, Math.min(1, value));
+      const minX = clamp((Math.min(...heads.map((b) => b.left)) - pad - canvas.left) / canvas.width);
+      const maxX = clamp((Math.max(...heads.map((b) => b.right)) + pad - canvas.left) / canvas.width);
+      const minY = clamp((Math.min(...heads.map((b) => b.top)) - pad - canvas.top) / canvas.height);
+      const maxY = clamp((Math.max(...heads.map((b) => b.bottom)) + pad - canvas.top) / canvas.height);
+      const fill = height / Math.min(height, width / (1536 / 1024));
+      const zoom = Math.min(fill, 1 / (maxX - minX), 1 / (maxY - minY), 2.2);
+      if (zoom > 1.05) panZoom.centerAt({ x: (minX + maxX) / 2, y: (minY + maxY) / 2 }, zoom);
+    });
+  }, [canvasSize.w, isMobile, editing, view, places]);
 
   useEffect(() => {
     if (!dirty && !photoUploading) return;
@@ -708,6 +738,16 @@ function TalatNoiApp({ storePromise }) {
         { minDistance: 52 },
       )
     : new Map();
+  // Pins pushed apart must stay on the illustration: keep each pin head inside its edges.
+  for (const place of visiblePlaces) {
+    const offset = spread.get(place.id);
+    if (!offset || !canvasSize.w) continue;
+    const x = (place.x / 100) * canvasSize.w + offset.dx;
+    const y = (place.y / 100) * canvasSize.h + offset.dy;
+    const dx = x < 24 ? 24 - x : x > canvasSize.w - 24 ? canvasSize.w - 24 - x : 0;
+    const dy = y < 46 ? 46 - y : y > canvasSize.h - 6 ? canvasSize.h - 6 - y : 0;
+    if (dx || dy) spread.set(place.id, { ...offset, dx: offset.dx + dx, dy: offset.dy + dy });
+  }
 
   const viewSwitch = (
     <>
@@ -722,12 +762,6 @@ function TalatNoiApp({ storePromise }) {
         <Icon.Locate size={15} />
         {tr("Navigation", "นำทาง")}
       </button>
-      {!editing && (
-        <button aria-pressed={view === "street"} onClick={() => (setView("street"), closeMenu())}>
-          <Icon.MapPin size={15} />
-          {tr("Street map", "แผนที่ถนน")}
-        </button>
-      )}
     </>
   );
 
@@ -1291,9 +1325,7 @@ function TalatNoiApp({ storePromise }) {
               </button>
             </div>
           )}
-          {view === "street" && (
-            <GoogleStreetMap places={visiblePlaces} fix={location.usableFix} selectedId={selectedId} onSelect={(id) => selectPlace(id)} lang={lang} />
-          )}
+
           {(view === "digital" || view === "original") && (
             <div className="map-bottom">
               <p>
@@ -1508,7 +1540,9 @@ function TalatNoiApp({ storePromise }) {
             />
             <div className="filter-sheet-views">
               <span className="eyebrow">{tr("MAP VIEW", "มุมมองแผนที่")}</span>
-              <div className="view-switch">{viewSwitch}</div>
+              <div className="view-switch" onClick={(event) => event.target.closest("button") && setFilterOpen(false)}>
+                {viewSwitch}
+              </div>
             </div>
             <div className="filter-sheet-actions">
               <Button variant="outline" onClick={resetFilters} disabled={!filtersActive} data-testid="filter-reset">
